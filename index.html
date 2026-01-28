@@ -163,7 +163,7 @@
                 <span class="text-[var(--color-primary)] italic">Sacred Circle.</span>
             </h2>
             <p class="text-[var(--color-text-muted)] mb-10 text-lg leading-relaxed max-w-md">
-                Experience Indian classical dance with AI-assisted posture correction, expression analysis, and immersive focus mode.
+                Experience Indian classical dance with AI-assisted posture correction and detailed expression analysis.
             </p>
             <button onclick="router.navigate('selection')" 
                     class="group flex items-center gap-4 px-10 py-4 glass-card hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all duration-500 rounded-full">
@@ -266,7 +266,7 @@
                 </div>
             </div>
 
-            <!-- PRACTICE TAB (AI + BLUR) -->
+            <!-- PRACTICE TAB (AI) -->
             <div id="content-practice" class="tab-content hidden w-full h-full relative bg-black">
                 <!-- Video Layers (Hidden opacity, not display:none for access) -->
                 <video id="webcam" class="absolute inset-0 w-full h-full object-cover mirror-mode opacity-0" autoplay muted playsinline></video>
@@ -325,7 +325,7 @@
                             <i data-lucide="camera" class="w-8 h-8 text-[var(--color-primary)]"></i>
                         </div>
                         <h3 class="text-2xl font-display text-white mb-2">Sanctum of Practice</h3>
-                        <p class="text-gray-400 mb-6 max-w-sm mx-auto">AI will blur your surroundings and track your face expressions, hands, and full body pose.</p>
+                        <p class="text-gray-400 mb-6 max-w-sm mx-auto">AI will track your face expressions, hands, and full body pose.</p>
                         
                         <div class="flex flex-col md:flex-row gap-4 justify-center">
                             <button onclick="app.startCamera()" class="px-8 py-3 bg-[var(--color-primary)] text-black font-bold rounded-full hover:scale-105 transition shadow-[0_0_20px_rgba(238,188,81,0.3)]">
@@ -514,7 +514,7 @@
                 holistic.setOptions({
                     modelComplexity: 1,
                     smoothLandmarks: true,
-                    enableSegmentation: true, 
+                    enableSegmentation: false, // Changed to false to remove blur as requested
                     smoothSegmentation: true,
                     refineFaceLandmarks: true,
                     minDetectionConfidence: 0.5,
@@ -611,23 +611,8 @@
                 ctx.save();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // --- SEGMENTATION LOGIC (Blur Background) ---
-                if (results.segmentationMask) {
-                    ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
-                    
-                    // Keep Person
-                    ctx.globalCompositeOperation = 'source-in';
-                    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-                    // Blur Background
-                    ctx.globalCompositeOperation = 'destination-over';
-                    ctx.filter = 'blur(10px)';
-                    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-                    ctx.filter = 'none';
-                } else {
-                    // Fallback if segmentation fails or mask empty
-                    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-                }
+                // --- DRAW IMAGE (No Blur) ---
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
                 // --- DRAW OVERLAYS ---
                 ctx.globalCompositeOperation = 'source-over';
