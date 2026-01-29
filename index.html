@@ -296,9 +296,10 @@
                     </div>
                 </div>
               <!-- LEFT SIDE TUTORIAL VIDEO -->
-<div id="practice-tutorial-video" class="absolute top-20 left-8 w-72 h-40 bg-black rounded-xl overflow-hidden shadow-2xl z-30 cursor-move">
+<div id="practice-tutorial-video" 
+     class="absolute top-20 left-8 w-72 h-40 bg-black rounded-xl overflow-hidden shadow-2xl z-30 cursor-move">
     <iframe src="https://www.youtube.com/embed/Hdai7FJrQ5Q?autoplay=1&mute=1"
-            class="w-full h-full object-cover"
+            class="w-full h-full object-cover pointer-events-none"
             title="Tutorial Video"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -307,38 +308,45 @@
 </div>
 
 <script>
-    // Make the tutorial video draggable
     const videoBox = document.getElementById('practice-tutorial-video');
     let isDragging = false;
-    let offsetX, offsetY;
+    let startX, startY;
+    let initialLeft, initialTop;
 
     videoBox.addEventListener('mousedown', (e) => {
         isDragging = true;
-        offsetX = e.clientX - videoBox.offsetLeft;
-        offsetY = e.clientY - videoBox.offsetTop;
-        videoBox.style.transition = 'none'; // Disable transition while dragging
+        startX = e.clientX;
+        startY = e.clientY;
+
+        const rect = videoBox.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        e.preventDefault(); // Prevent text selection
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        let x = e.clientX - offsetX;
-        let y = e.clientY - offsetY;
 
-        // Optional: keep it inside the window
-        x = Math.max(0, Math.min(window.innerWidth - videoBox.offsetWidth, x));
-        y = Math.max(0, Math.min(window.innerHeight - videoBox.offsetHeight, y));
+        let deltaX = e.clientX - startX;
+        let deltaY = e.clientY - startY;
 
-        videoBox.style.left = x + 'px';
-        videoBox.style.top = y + 'px';
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        // Keep inside window
+        newLeft = Math.max(0, Math.min(window.innerWidth - videoBox.offsetWidth, newLeft));
+        newTop = Math.max(0, Math.min(window.innerHeight - videoBox.offsetHeight, newTop));
+
+        videoBox.style.left = newLeft + 'px';
+        videoBox.style.top = newTop + 'px';
     });
 
     document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            isDragging = false;
-            videoBox.style.transition = ''; // Restore transition if needed
-        }
+        isDragging = false;
     });
 </script>
+
 
 
 
