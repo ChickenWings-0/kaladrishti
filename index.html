@@ -204,44 +204,42 @@
     <!-- ============================================== -->
 <!-- VIEW 4: DASHBOARD -->
 <!-- ============================================== -->
-<div id="view-dashboard" class="view-section bg-[var(--color-bg-dark)]">
-    <div class="relative w-full h-72 overflow-hidden">
+<div id="view-dashboard" class="view-section relative h-screen w-full overflow-hidden bg-[var(--color-bg-dark)] hidden">
 
-        <!-- ✅ FIXED HERO IMAGE -->
+    <div class="absolute inset-0 z-0">
         <img
             id="dashboard-hero-img"
-            class="w-full h-full object-contain object-center"
+            class="w-full h-full object-cover object-center transition-transform duration-1000 scale-105"
             alt="Dance background">
+        <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-black/30"></div>
+    </div>
 
-        <!-- Gradient overlay -->
-        <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/60 to-transparent"></div>
+    <div class="relative z-10 h-full w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-12 md:pb-20">
 
-        <!-- Title + Back button -->
-        <div class="absolute bottom-8 left-8 md:left-12">
+        <div class="mb-8">
             <button onclick="router.navigate('selection')"
-                class="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mb-4 hover:text-white transition">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Selection
+                class="group flex items-center gap-2 text-sm text-white/70 hover:text-white mb-6 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1 rounded-full w-fit border border-white/10">
+                <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
+                Back to Selection
             </button>
 
             <h1 id="dashboard-title"
-                class="text-5xl md:text-6xl font-display text-[var(--color-primary)]">
-                Title
+                class="text-5xl md:text-7xl font-display text-white mb-2 tracking-tight drop-shadow-lg">
+                Loading...
             </h1>
+
+            <div id="dashboard-meta" class="text-lg text-white/80 font-light flex items-center gap-2">
+                </div>
+        </div>
+
+        <div class="w-full">
+            <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum</h3>
+
+            <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide">
+                </div>
         </div>
     </div>
-
-    <main class="px-8 md:px-12 py-8 max-w-5xl mx-auto w-full">
-        <div class="flex items-center justify-between mb-8">
-            <h3 class="text-2xl font-display text-white">Curriculum</h3>
-            <div class="text-sm text-[var(--color-text-muted)]">
-                Beginner • 4 Lectures
-            </div>
-        </div>
-
-        <div class="space-y-4" id="lecture-list"></div>
-    </main>
 </div>
-
 
     <!-- ============================================== -->
     <!-- VIEW 5: LECTURE / PRACTICE / RESULTS -->
