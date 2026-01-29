@@ -192,27 +192,46 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- VIEW 4: DASHBOARD -->
-    <!-- ============================================== -->
-    <div id="view-dashboard" class="view-section bg-[var(--color-bg-dark)]">
-        <div class="relative w-full h-72 overflow-hidden">
-            <img id="dashboard-hero-img" src="" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/60 to-transparent"></div>
-            <div class="absolute bottom-8 left-8 md:left-12">
-                <button onclick="router.navigate('selection')" class="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mb-4 hover:text-white transition">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Selection
-                </button>
-                <h1 id="dashboard-title" class="text-5xl md:text-6xl font-display text-[var(--color-primary)]">Title</h1>
+<!-- VIEW 4: DASHBOARD -->
+<!-- ============================================== -->
+<div id="view-dashboard" class="view-section bg-[var(--color-bg-dark)]">
+    <div class="relative w-full h-72 overflow-hidden">
+
+        <!-- ✅ FIXED HERO IMAGE -->
+        <img
+            id="dashboard-hero-img"
+            class="w-full h-full object-contain object-center"
+            alt="Dance background">
+
+        <!-- Gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/60 to-transparent"></div>
+
+        <!-- Title + Back button -->
+        <div class="absolute bottom-8 left-8 md:left-12">
+            <button onclick="router.navigate('selection')"
+                class="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mb-4 hover:text-white transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Selection
+            </button>
+
+            <h1 id="dashboard-title"
+                class="text-5xl md:text-6xl font-display text-[var(--color-primary)]">
+                Title
+            </h1>
+        </div>
+    </div>
+
+    <main class="px-8 md:px-12 py-8 max-w-5xl mx-auto w-full">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-2xl font-display text-white">Curriculum</h3>
+            <div class="text-sm text-[var(--color-text-muted)]">
+                Beginner • 4 Lectures
             </div>
         </div>
-        <main class="px-8 md:px-12 py-8 max-w-5xl mx-auto w-full">
-            <div class="flex items-center justify-between mb-8">
-                <h3 class="text-2xl font-display text-white">Curriculum</h3>
-                <div class="text-sm text-[var(--color-text-muted)]">Beginner • 4 Lectures</div>
-            </div>
-            <div class="space-y-4" id="lecture-list"></div>
-        </main>
-    </div>
+
+        <div class="space-y-4" id="lecture-list"></div>
+    </main>
+</div>
+
 
     <!-- ============================================== -->
     <!-- VIEW 5: LECTURE / PRACTICE / RESULTS -->
