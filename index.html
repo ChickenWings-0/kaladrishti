@@ -573,7 +573,7 @@ function resizeTutorial(action) {
     loopId: null,
     showLandmarks: true,
 
-    // 👇 ADD THESE
+    // 👇 ADD THESE (NEW)
     poseHoldStart: null,
     poseConfirmed: false,
     autoAdvanced: false
@@ -769,14 +769,14 @@ function resizeTutorial(action) {
                 if(state.mode === 'image') ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
                 
                 const analysis = app.analyzePosture(results.poseLandmarks); 
-                let feedbackColor = '#ff3333'; // default RED
+                let feedbackColor = analysis > 75 ? '#00eaff' : '#ff3333';
 
 if (
     state.dance?.id === 'bharatanatyam' &&
     state.lecture?.id === 1 &&
     state.poseConfirmed
 ) {
-    feedbackColor = '#00ff88'; // GREEN when Bhumi Pranam correct
+    feedbackColor = '#00ff88'; // GREEN
 }
  
                 
@@ -784,7 +784,7 @@ if (
                 if (state.showLandmarks) {
                     // 1. Pose: Body
                     drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: feedbackColor, lineWidth: 3});
-                    drawLandmarks(ctx, results.poseLandmarks, {color: feedbackColor, lineWidth: 1, radius: 3, fillColor: feedbackColor});
+                    drawLandmarks(ctx, results.poseLandmarks, {color: '#eebc51', lineWidth: 1, radius: 3, fillColor: feedbackColor});
 
                     // 2. Hands
                     drawConnectors(ctx, results.leftHandLandmarks, HAND_CONNECTIONS, {color: feedbackColor, lineWidth: 2});
@@ -797,13 +797,39 @@ if (
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_FACE_OVAL, {color: 'rgba(238, 188, 81, 0.5)', lineWidth: 1});
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_LEFT_EYE, {color: '#eebc51', lineWidth: 1});
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {color: '#eebc51', lineWidth: 1});
-                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: feedbackColor, lineWidth: 1});
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: '#ff3333', lineWidth: 1});
                     }
                 }
                 
                 ctx.restore();
 
                 app.analyzeExpression(results.faceLandmarks);
+                // --- BHUMI PRANAM LOGIC (ONLY Lecture 1) ---
+if (
+    state.dance?.id === 'bharatanatyam' &&
+    state.lecture?.id === 1
+) {
+    const bhumi = app.detectBhumiPranam(results);
+    const feedback = document.getElementById('ai-feedback');
+
+    if (bhumi.done) {
+        feedback.innerText = bhumi.step;
+        feedback.className = "text-xs text-center italic text-green-400";
+
+        // GREEN skeleton when correct
+        state.currentScore = 100;
+
+        // Auto next lecture
+        if (!state.autoAdvanced) {
+            state.autoAdvanced = true;
+            setTimeout(() => app.selectLecture(2), 1500);
+        }
+    } else {
+        feedback.innerText = bhumi.step;
+        feedback.className = "text-xs text-center italic text-yellow-400";
+    }
+}
+
                 
                 const statusInd = document.getElementById('status-indicator');
                 if (analysis > 75) statusInd.classList.replace('bg-red-500', 'bg-green-500') || statusInd.classList.add('bg-green-500');
@@ -865,10 +891,8 @@ if (
                     el.innerText = "Serene / Neutral"; el.style.color = "white"; 
                     bar.style.width = "30%"; bar.className = "h-full w-0 transition-all duration-300 bg-purple-500";
                 }
-            },
-
-            analyzePosture: (landmarks) => {
-                 if (!results.poseLandmarks || !results.leftHandLandmarks || !results.rightHandLandmarks) {
+            detectBhumiPranam: (results) => {
+    if (!results.poseLandmarks || !results.leftHandLandmarks || !results.rightHandLandmarks) {
         return { done: false, step: "Pose not visible" };
     }
 
@@ -887,18 +911,20 @@ if (
     const leftPalm = leftHand[0];
     const rightPalm = rightHand[0];
 
+    // Step 1: Anjali Hasta
     const palmDistance = Math.abs(leftPalm.x - rightPalm.x);
     const chestY = (leftShoulder.y + rightShoulder.y) / 2;
-
     const palmsAtChest =
         palmDistance < 0.05 &&
         Math.abs(leftPalm.y - chestY) < 0.08;
 
+    // Step 2: Bow
     const hipCenterY = (leftHip.y + rightHip.y) / 2;
     const torsoBent =
         nose.y > chestY + 0.05 &&
         nose.y < hipCenterY;
 
+    // Step 3: Earth touch
     const ankleY = (leftAnkle.y + rightAnkle.y) / 2;
     const handsNearFeet =
         leftPalm.y > ankleY - 0.08 &&
@@ -910,18 +936,54 @@ if (
         if (!state.poseHoldStart) state.poseHoldStart = now;
 
         const holdTime = (now - state.poseHoldStart) / 1000;
-
         if (holdTime >= 2) {
             state.poseConfirmed = true;
-            return { done: true, step: "Bhumi Pranam Completed" };
+            return { done: true, step: "Bhumi Pranam Completed 🙏" };
         }
-
         return { done: false, step: `Hold for ${(2 - holdTime).toFixed(1)}s` };
     }
 
     state.poseHoldStart = null;
-    return { done: false, step: "Form Bhumi Pranam posture" };
+    state.poseConfirmed = false;
+    return { done: false, step: "Perform Bhumi Pranam steps" };
 },
+},
+
+            analyzePosture: (landmarks) => {
+                if(!landmarks) return 0;
+                
+                const nose = landmarks[0];
+                const leftHip = landmarks[23];
+                const rightHip = landmarks[24];
+                const centerHip = (leftHip.x + rightHip.x)/2;
+                const spineScore = Math.max(0, 100 - (Math.abs(nose.x - centerHip) * 600));
+                
+                const leftShoulder = landmarks[11];
+                const rightShoulder = landmarks[12];
+                const shoulderScore = Math.max(0, 100 - (Math.abs(leftShoulder.y - rightShoulder.y) * 400));
+                
+                const leftElbow = landmarks[13];
+                const rightElbow = landmarks[14];
+                const armSpread = Math.abs(leftElbow.x - rightElbow.x);
+                const armScore = armSpread > 0.3 ? 100 : 50;
+
+                const finalScore = Math.floor((spineScore * 0.4) + (shoulderScore * 0.4) + (armScore * 0.2));
+                state.currentScore = finalScore;
+                
+                document.getElementById('val-posture').innerText = finalScore + "%";
+                document.getElementById('bar-posture').style.width = finalScore + "%";
+                
+                const feedback = document.getElementById('ai-feedback');
+                if(finalScore > 75) {
+                    feedback.innerText = "Excellent posture."; 
+                    feedback.className = "text-xs text-center italic text-green-400";
+                } else {
+                    feedback.innerText = "Adjust alignment."; 
+                    feedback.className = "text-xs text-center italic text-red-400";
+                }
+                
+                return finalScore;
+            },
 
             toggleRecording: () => {
     const btn = document.getElementById('btn-record');
