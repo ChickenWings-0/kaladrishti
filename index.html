@@ -237,6 +237,7 @@ border-b border-[var(--color-primary)]/20">
 <!-- ============================================== -->
 <div id="view-dashboard" class="view-section relative h-screen w-full overflow-hidden bg-[var(--color-bg-dark)] hidden">
 
+    <!-- Background -->
     <div class="absolute inset-0 z-0">
         <img
             id="dashboard-hero-img"
@@ -245,23 +246,28 @@ border-b border-[var(--color-primary)]/20">
         <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-black/30"></div>
     </div>
 
+    <!-- 🔥 Floating Back Button (Top Left) -->
+    <button onclick="router.navigate('selection')"
+        class="absolute top-6 left-6 z-20 group flex items-center gap-2 text-sm 
+        text-[var(--color-primary)] hover:translate-x-1 
+        transition-all duration-300 backdrop-blur-md 
+        bg-black/30 px-5 py-2 rounded-full 
+        border border-[var(--color-primary)]/30 shadow-lg">
+
+        <i data-lucide="arrow-left"
+            class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1">
+        </i>
+        Back
+    </button>
+
+    <!-- Content -->
     <div class="relative z-10 h-full w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-12 md:pb-20">
 
         <div class="mb-8">
 
-            <!-- Upgraded Back Button -->
-            <button onclick="router.navigate('selection')"
-                class="group flex items-center gap-2 text-sm text-[var(--color-primary)] 
-                hover:translate-x-1 transition-all duration-300 
-                backdrop-blur-sm bg-black/20 px-4 py-2 rounded-full 
-                w-fit border border-[var(--color-primary)]/20">
-                <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
-                Back to Selection
-            </button>
-
             <!-- Title -->
             <h1 id="dashboard-title"
-                class="text-5xl md:text-7xl font-display text-white tracking-tight drop-shadow-lg mt-6">
+                class="text-5xl md:text-7xl font-display text-white tracking-tight drop-shadow-lg">
                 Loading...
             </h1>
 
@@ -296,7 +302,8 @@ border-b border-[var(--color-primary)]/20">
         <div class="w-full">
             <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum</h3>
 
-            <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide">
+            <div id="lecture-list"
+                class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide">
             </div>
         </div>
     </div>
