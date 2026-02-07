@@ -495,8 +495,11 @@ function resizeTutorial(action) {
     <!-- ============================================== -->
     <!-- JAVASCRIPT LOGIC -->
     <!-- ============================================== -->
-    <script>
-        // --- API INTEGRATION CLASS ---
+    <script type="module">
+  import { DANCES, LECTURES } from './data.js';
+  import { state } from './state.js';
+  
+  // --- API INTEGRATION CLASS ---
         class KaladrishtiAPI {
             constructor(baseUrl) {
                 this.baseUrl = baseUrl || 'https://api.kaladrishti.com/v1'; // Placeholder
@@ -542,94 +545,10 @@ function resizeTutorial(action) {
         }
         const practiceSessionsDB = new MongoService('sessions');
 
-        const DANCES = [
-            { id: 'bharatanatyam', name: 'Bharatanatyam', img: 'media/img/BHARATNATYAM.png', origin: 'Tamil Nadu' },
-            { id: 'kathak', name: 'Kathak', img: 'media/img/KATHAK.png', origin: 'North India' },
-            { id: 'odissi', name: 'Odissi', img: 'media/img/ODISSI.png', origin: 'Odisha' },
-            { id: 'kuchipudi', name: 'Kuchipudi', img: 'media/img/KUCHIPUDI.png', origin: 'Andhra Pradesh' },
-            { id: 'kathakali', name: 'Kathakali', img: 'media/img/KATHAKALI.png', origin: 'Kerala' },
-            { id: 'mohiniyattam', name: 'Mohiniyattam', img: 'media/img/MOHINIYATTAM.png', origin: 'Kerala' },
-            { id: 'manipuri', name: 'Manipuri', img: 'media/img/MANIPURI.png', origin: 'Manipur' },
-            { id: 'sattriya', name: 'Sattriya', img: 'media/img/SATTRIYA.png', origin: 'Assam' },
-        ];
-
-        const LECTURES = {
-    bharatanatyam: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/BH1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/BH2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
-    ],
-
-    kathak: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/K1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/K2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/K3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/K4.mp4" },
-    ],
-
-    odissi: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/O1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/O2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/O3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/O4.mp4" },
-    ],
-
-    kuchipudi: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/KU1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/KU2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/KU3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/KU4.mp4" },
-    ],
-
-    kathakali: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/KA1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/KA2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/KA3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/KA4.mp4" },
-    ],
-
-    mohiniyattam: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/M1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/M2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/M3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/M4.mp4" },
-    ],
-
-    manipuri: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/MA1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/MA2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/MA3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/MA4.mp4" },
-    ],
-
-    sattriya: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/S1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/S2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/S3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/S4.mp4" },
-    ],
-};
+        
 
 
-        const state = {
-    view: 'landing',
-    dance: null,
-    lecture: null,
-    recording: false,
-    holistic: null,
-    camera: null,
-    mode: 'camera',
-    history: [],
-    currentScore: 0,
-    loopId: null,
-    showLandmarks: true,
-
-    // 👇 ADD THESE (NEW)
-    poseHoldStart: null,
-    poseConfirmed: false,
-    autoAdvanced: false
-};
+   
 
 
         const router = {
