@@ -115,6 +115,11 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* Added hitbox styles */
+        .hitbox-target { fill: rgba(90, 255, 120, 0.28); stroke: rgba(120, 255, 160, 0.7); stroke-width: 2; }
+        .hitbox-good { fill: rgba(80, 220, 100, 0.55); stroke: #50ff80; }
+        .hitbox-bad  { fill: rgba(255, 80, 80, 0.35);  stroke: #ff5050; }
     </style>
 </head>
 <body>
@@ -293,10 +298,22 @@
                             <div id="bar-posture" class="h-full bg-green-500 w-0 transition-all duration-300"></div>
                         </div>
                     </div>
+
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Hitbox Match</span>
+                            <span id="val-hitbox">0%</span>
+                        </div>
+                        <div class="h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div id="bar-hitbox" class="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
                     
                     <div class="p-3 bg-white/5 rounded border border-white/5">
                         <p id="ai-feedback" class="text-xs text-center italic text-gray-300">"Initialize camera..."</p>
                     </div>
+                    
+                    <div id="joint-feedback" class="mt-4 text-xs text-gray-300 max-h-32 overflow-y-auto space-y-1"></div>
                 </div>
 
                 <!-- LEFT SIDE TUTORIAL VIDEO -->
@@ -458,7 +475,12 @@
             stageHoldDuration: 1.5,
             userPoseBuffer: [],
             referenceSequence: [],
-            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]')  // NEW
+            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]'),
+            // New for hitboxes
+            keyJoints: [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28],
+            hitboxRadiusNorm: 0.055,
+            userTorsoScale: 1.0,
+            currentRefFrame: null
         };
 
         const router = {
@@ -500,110 +522,82 @@
                 const grid = document.getElementById('dance-grid');
                 grid.innerHTML = DANCES.map(d => `
                     <div onclick="app.selectDance('${d.id}')" 
-                         class="group relative h-52 rounded-xl overflow-hidden cursor-pointer shadow-2xl border border-white/5 transition-all duration-500 hover:scale-105 hover:border-[var(--color-primary)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
-                        <img src="${d.img}" class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="${d.name}" onerror="this.src='https://images.unsplash.com/photo-1518131393663-39c2f6d62325?q=80&w=600'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
-                        <div class="absolute bottom-0 left-0 p-6">
-                            <p class="text-[var(--color-primary)] text-xs font-bold uppercase tracking-widest mb-1">${d.origin}</p>
-                            <h3 class="text-2xl font-display text-white mb-2 group-hover:translate-x-2 transition-transform">${d.name}</h3>
+                         class="glass-card rounded-2xl overflow-hidden cursor-pointer hover:scale-105 transition-all duration-500 group shadow-xl hover:shadow-[var(--color-primary)]/20 border border-white/5 hover:border-[var(--color-primary)]/30">
+                        <div class="relative h-48 md:h-64 overflow-hidden">
+                            <img src="${d.img}" class="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt="${d.name}">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-70"></div>
+                            <div class="absolute bottom-4 left-4">
+                                <h3 class="text-2xl font-display text-white mb-1">${d.name}</h3>
+                                <p class="text-xs text-gray-400 uppercase tracking-widest">${d.origin}</p>
+                            </div>
                         </div>
                     </div>
                 `).join('');
             },
 
-            selectDance: (id) => {
-                state.dance = DANCES.find(d => d.id === id);
-                document.getElementById('dashboard-title').innerText = state.dance.name;
-                document.getElementById('dashboard-hero-img').src = state.dance.img;
+            selectDance: (danceId) => {
+                state.dance = DANCES.find(d => d.id === danceId);
+                if (!state.dance) return;
 
-                const danceLectures = LECTURES[id] || [];
-                document.getElementById('lecture-list').innerHTML = danceLectures.map((l, i) => `
-                    <div onclick="app.selectLecture(${l.id})"
-                         class="glass-card p-6 rounded-sm flex items-center gap-6 cursor-pointer hover:bg-white/5 transition group border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
-                        <div class="text-4xl font-display text-gray-600 group-hover:text-[var(--color-primary)] transition">0${i+1}</div>
-                        <div class="flex-grow">
-                            <h4 class="text-lg font-bold text-white group-hover:text-[var(--color-primary)] transition">${l.title}</h4>
-                            <p class="text-sm text-gray-400">${l.desc}</p>
+                document.getElementById('dashboard-title').textContent = state.dance.name;
+                document.getElementById('dashboard-description').textContent = `Master the ancient art from ${state.dance.origin}.`;
+                document.getElementById('dashboard-hero-img').src = state.dance.img;
+                document.getElementById('dashboard-meta').innerHTML = `<i data-lucide="map-pin" class="w-4 h-4"></i> ${state.dance.origin}`;
+                lucide.createIcons();
+
+                const lectures = LECTURES[state.dance.id] || [];
+                const list = document.getElementById('lecture-list');
+                list.innerHTML = lectures.map(l => `
+                    <div onclick="app.selectLecture(${l.id})" class="glass-card p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-white/5 transition">
+                        <div>
+                            <h4 class="text-white font-bold">${l.title}</h4>
+                            <p class="text-xs text-gray-400">${l.desc}</p>
                         </div>
-                        <div class="px-3 py-1 border border-gray-700 rounded text-xs text-gray-400">${l.duration}</div>
+                        <div class="text-right text-sm text-gray-400">
+                            <span>${l.duration}</span>
+                        </div>
                     </div>
                 `).join('');
 
                 router.navigate('dashboard');
             },
 
-            selectLecture: (id) => {
-                const danceLectures = LECTURES[state.dance.id] || [];
-                state.lecture = danceLectures.find(l => l.id === id);
+            selectLecture: (lectureId) => {
+                state.lecture = LECTURES[state.dance.id].find(l => l.id === lectureId);
+                if (!state.lecture) return;
 
-                const total = danceLectures.length;
-                const percent = Math.floor((state.lecture.id / total) * 100);
-                document.getElementById("progress-bar").style.width = percent + "%";
-                document.getElementById("progress-percent").innerText = percent + "%";
+                document.getElementById('lecture-nav-title').textContent = state.lecture.title;
+                document.querySelector('#content-tutorial video source').src = state.lecture.video;
+                document.querySelector('#content-tutorial video').load();
+                document.getElementById('tutorialVideo').querySelector('source').src = state.lecture.video;
+                document.getElementById('tutorialVideo').load();
 
-                document.getElementById('lecture-nav-title').innerText = state.lecture.title;
-
-                const tutVid = document.querySelector("#content-tutorial video");
-                const pracVid = document.getElementById("tutorialVideo");
-                tutVid.querySelector("source").src = state.lecture.video;
-                tutVid.load();
-                pracVid.querySelector("source").src = state.lecture.video;
-                pracVid.load();
-
-                state.bhumiStage = 0;
-                state.stageStartTime = null;
-                state.poseConfirmed = false;
-                state.autoAdvanced = false;
-                state.userPoseBuffer = [];
-
-                app.switchTab('tutorial');
                 router.navigate('lecture');
+                app.renderResults();
             },
 
-            switchTab: (tab) => {
+            switchTab: (tabId) => {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-                document.getElementById(`content-${tab}`).classList.remove('hidden');
-                
-                ['tutorial', 'practice', 'results'].forEach(t => {
-                    const btn = document.getElementById(`tab-${t}`);
-                    btn.classList.toggle('bg-[var(--color-primary)]', t === tab);
-                    btn.classList.toggle('text-black', t === tab);
-                    btn.classList.toggle('text-gray-400', t !== tab);
-                });
+                document.getElementById(`content-${tabId}`).classList.remove('hidden');
 
-                if (tab !== 'practice') app.stopCamera();
-                if (tab === 'results') app.renderResults();
+                document.querySelectorAll('#lecture-header button').forEach(btn => {
+                    btn.classList.remove('bg-[var(--color-primary)]', 'text-black');
+                    btn.classList.add('text-gray-400');
+                });
+                document.getElementById(`tab-${tabId}`).classList.add('bg-[var(--color-primary)]', 'text-black');
+
+                if (tabId === 'practice') app.startCamera();
+                else app.stopCamera();
             },
 
             toggleLandmarks: () => {
                 state.showLandmarks = !state.showLandmarks;
-                const btn = document.getElementById('btn-toggle-landmarks');
-                btn.classList.toggle('bg-red-500/80', !state.showLandmarks);
-                btn.classList.toggle('bg-gray-800/80', state.showLandmarks);
-                btn.innerHTML = `<i data-lucide="${state.showLandmarks ? 'eye' : 'eye-off'}" class="w-6 h-6"></i>`;
-                lucide.createIcons();
-            },
-
-            initHolistic: () => {
-                const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
-                holistic.setOptions({
-                    modelComplexity: 1,
-                    smoothLandmarks: true,
-                    enableSegmentation: false,
-                    smoothSegmentation: false,
-                    refineFaceLandmarks: true,
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
-                });
-                holistic.onResults(app.onResults);
-                return holistic;
             },
 
             startCamera: async () => {
-                state.mode = 'camera';
-                const video = document.getElementById('webcam');
                 const placeholder = document.getElementById('camera-placeholder');
                 const loader = document.getElementById('ai-loading');
+                const video = document.getElementById('webcam');
 
                 placeholder.style.display = 'none';
                 loader.style.display = 'flex';
@@ -624,12 +618,34 @@
                         }
                     };
                     sendFrame();
+
+                    // New: Sync with tutorial video
+                    document.getElementById('tutorialVideo').addEventListener('timeupdate', app.syncReferenceWithVideo);
                 } catch (e) {
                     console.error(e);
                     alert("Camera start failed. Check permissions.");
                     loader.style.display = 'none';
                     placeholder.style.display = 'flex';
                 }
+            },
+
+            // New sync function
+            syncReferenceWithVideo: () => {
+                const vid = document.getElementById('tutorialVideo');
+                if (!vid || vid.paused || !state.referenceSequence.length) return;
+
+                const time = vid.currentTime;
+                let closest = state.referenceSequence[0];
+                let minDiff = Infinity;
+
+                for (const frame of state.referenceSequence) {
+                    const diff = Math.abs(frame.time - time);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = frame;
+                    }
+                }
+                state.currentRefFrame = closest;
             },
 
             handleImageUpload: (event) => {
@@ -650,6 +666,18 @@
                 imgElement.classList.remove('hidden');
             },
 
+            initHolistic: () => {
+                const holistic = new Holistic({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+                });
+                holistic.setOptions({
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                holistic.onResults(app.onResults);
+                return holistic;
+            },
+
             onResults: (results) => {
                 document.getElementById('ai-loading').style.display = 'none';
                 const canvas = document.getElementById('output_canvas');
@@ -662,7 +690,7 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 if (state.mode === 'image') ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-                const analysis = app.analyzePosture(results.poseLandmarks);
+                let analysis = app.analyzePosture(results.poseLandmarks);
                 let feedbackColor = analysis > 75 ? '#00eaff' : '#ff3333';
 
                 if (state.dance?.id === 'bharatanatyam' && state.lecture?.id === 1 && state.poseConfirmed) {
@@ -684,6 +712,60 @@
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {color: '#eebc51', lineWidth: 1});
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: '#ff3333', lineWidth: 1});
                     }
+                }
+
+                // New hitbox logic
+                let hitboxMatchPercent = 0;
+                let errorHighlights = [];
+                let hitboxDetails = [];
+
+                if (results.poseLandmarks && state.referenceSequence.length > 0 && state.currentRefFrame) {
+                    const normUser = app.normalizePose(results.poseLandmarks);
+                    const normRef = app.normalizePose(state.currentRefFrame.pose);
+
+                    const hitboxResult = app.evaluateHitboxes(normUser, normRef);
+                    hitboxMatchPercent = hitboxResult.score;
+                    hitboxDetails = hitboxResult.details;
+
+                    // Render hitboxes
+                    if (state.showLandmarks) {
+                        state.keyJoints.forEach(idx => {
+                            const ref = normRef[idx];
+                            if (ref) {
+                                const cx = ref.x * canvas.width;
+                                const cy = ref.y * canvas.height;
+                                const radius = state.hitboxRadiusNorm * Math.min(canvas.width, canvas.height) * state.userTorsoScale;
+
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+                                ctx.fillStyle = 'rgba(90, 255, 120, 0.28)';
+                                ctx.fill();
+                                ctx.strokeStyle = 'rgba(120, 255, 160, 0.7)';
+                                ctx.lineWidth = 2;
+                                ctx.stroke();
+                            }
+                        });
+                    }
+
+                    // User feedback dots
+                    state.keyJoints.forEach(idx => {
+                        const user = normUser[idx];
+                        if (user) {
+                            const ux = user.x * canvas.width;
+                            const uy = user.y * canvas.height;
+                            const ref = normRef[idx];
+                            if (ref) {
+                                const inside = app.pointInCircle(user.x, user.y, ref.x, ref.y, state.hitboxRadiusNorm * state.userTorsoScale);
+                                ctx.beginPath();
+                                ctx.arc(ux, uy, 8, 0, 2 * Math.PI);
+                                ctx.fillStyle = inside ? 'rgba(80, 220, 100, 0.55)' : 'rgba(255, 80, 80, 0.35)';
+                                ctx.strokeStyle = inside ? '#50ff80' : '#ff5050';
+                                ctx.lineWidth = 2;
+                                ctx.fill();
+                                ctx.stroke();
+                            }
+                        }
+                    });
                 }
 
                 ctx.restore();
@@ -750,6 +832,18 @@
                 document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
                 document.getElementById('cam-controls').style.opacity = '1';
                 document.getElementById('cam-controls').style.pointerEvents = 'auto';
+
+                // Update hitbox UI
+                document.getElementById('val-hitbox').innerText = hitboxMatchPercent + '%';
+                document.getElementById('bar-hitbox').style.width = hitboxMatchPercent + '%';
+
+                const jointFb = document.getElementById('joint-feedback');
+                jointFb.innerHTML = hitboxDetails.map(d => `
+                    <div class="flex justify-between ${d.inside ? 'text-green-400' : 'text-red-400'}">
+                        <span>${d.name}</span>
+                        <span>${d.inside ? '✓' : '✗'}</span>
+                    </div>
+                `).join('');
             },
 
             stopCamera: () => {
@@ -979,7 +1073,6 @@
                 }
             },
 
-            // NEW: Save recording to results
             saveRecordingToResults: (blob, url) => {
                 const durationSec = Math.round((new Date() - state.recordStartTime) / 1000);
                 const duration = `${Math.floor(durationSec / 60)}m ${durationSec % 60}s`;
@@ -1129,8 +1222,61 @@
                 state.history = await practiceSessionsDB.find();
                 modal.classList.add('hidden');
                 app.switchTab('results');
+            },
+
+            // New utility functions for hitboxes
+            normalizePose: (landmarks) => {
+                if (!landmarks || landmarks.length < 33) return landmarks;
+
+                const hipAvg = {x: (landmarks[23].x + landmarks[24].x)/2, y: (landmarks[23].y + landmarks[24].y)/2};
+                const centered = landmarks.map(lm => ({...lm, x: lm.x - hipAvg.x + 0.5, y: lm.y - hipAvg.y + 0.5}));
+
+                const refTorso = app.getTorsoLength(state.currentRefFrame?.pose || centered);
+                const userTorso = app.getTorsoLength(centered);
+                state.userTorsoScale = refTorso / userTorso;
+
+                return centered.map(lm => ({...lm, x: 0.5 + (lm.x - 0.5) * state.userTorsoScale, y: 0.5 + (lm.y - 0.5) * state.userTorsoScale}));
+            },
+
+            getTorsoLength: (landmarks) => {
+                if (!landmarks[11] || !landmarks[23]) return 1;
+                const shoulderAvg = {x: (landmarks[11].x + landmarks[12].x)/2, y: (landmarks[11].y + landmarks[12].y)/2};
+                const hipAvg = {x: (landmarks[23].x + landmarks[24].x)/2, y: (landmarks[23].y + landmarks[24].y)/2};
+                return Math.hypot(shoulderAvg.x - hipAvg.x, shoulderAvg.y - hipAvg.y);
+            },
+
+            pointInCircle: (px, py, cx, cy, r) => {
+                return Math.pow(px - cx, 2) + Math.pow(py - cy, 2) <= Math.pow(r, 2);
+            },
+
+            evaluateHitboxes: (userNorm, refNorm) => {
+                let insideCount = 0;
+                const details = [];
+
+                state.keyJoints.forEach(idx => {
+                    const u = userNorm[idx];
+                    const r = refNorm[idx];
+                    if (!u || !r || r.visibility < 0.4) return;
+
+                    const inside = app.pointInCircle(u.x, u.y, r.x, r.y, state.hitboxRadiusNorm * state.userTorsoScale);
+                    if (inside) insideCount++;
+
+                    details.push({
+                        name: idx === 0 ? 'Head' : idx <= 16 ? `Arm ${idx-10}` : `Leg ${idx-22}`,
+                        inside
+                    });
+                });
+
+                const score = Math.round((insideCount / state.keyJoints.length) * 100);
+                return {score, details};
             }
         };
+
+        // Resize tutorial video
+        function resizeTutorial(size) {
+            const window = document.getElementById('practice-tutorial-video');
+            window.style.width = size === 'small' ? '18rem' : '28rem';
+        }
 
         window.addEventListener('DOMContentLoaded', app.init);
     </script>
