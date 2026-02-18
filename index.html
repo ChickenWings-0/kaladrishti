@@ -115,11 +115,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        /* Added hitbox styles */
-        .hitbox-target { fill: rgba(90, 255, 120, 0.28); stroke: rgba(120, 255, 160, 0.7); stroke-width: 2; }
-        .hitbox-good { fill: rgba(80, 220, 100, 0.55); stroke: #50ff80; }
-        .hitbox-bad  { fill: rgba(255, 80, 80, 0.35);  stroke: #ff5050; }
     </style>
 </head>
 <body>
@@ -298,22 +293,10 @@
                             <div id="bar-posture" class="h-full bg-green-500 w-0 transition-all duration-300"></div>
                         </div>
                     </div>
-
-                    <div class="mb-4">
-                        <div class="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Hitbox Match</span>
-                            <span id="val-hitbox">0%</span>
-                        </div>
-                        <div class="h-1 bg-gray-700 rounded-full overflow-hidden">
-                            <div id="bar-hitbox" class="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 w-0 transition-all duration-300"></div>
-                        </div>
-                    </div>
                     
                     <div class="p-3 bg-white/5 rounded border border-white/5">
                         <p id="ai-feedback" class="text-xs text-center italic text-gray-300">"Initialize camera..."</p>
                     </div>
-                    
-                    <div id="joint-feedback" class="mt-4 text-xs text-gray-300 max-h-32 overflow-y-auto space-y-1"></div>
                 </div>
 
                 <!-- LEFT SIDE TUTORIAL VIDEO -->
@@ -475,12 +458,7 @@
             stageHoldDuration: 1.5,
             userPoseBuffer: [],
             referenceSequence: [],
-            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]'),
-            // New for hitboxes
-            keyJoints: [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28],
-            hitboxRadiusNorm: 0.055,
-            userTorsoScale: 1.0,
-            currentRefFrame: null
+            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]')  // NEW
         };
 
         const router = {
@@ -618,34 +596,12 @@
                         }
                     };
                     sendFrame();
-
-                    // New: Sync with tutorial video
-                    document.getElementById('tutorialVideo').addEventListener('timeupdate', app.syncReferenceWithVideo);
                 } catch (e) {
                     console.error(e);
                     alert("Camera start failed. Check permissions.");
                     loader.style.display = 'none';
                     placeholder.style.display = 'flex';
                 }
-            },
-
-            // New sync function
-            syncReferenceWithVideo: () => {
-                const vid = document.getElementById('tutorialVideo');
-                if (!vid || vid.paused || !state.referenceSequence.length) return;
-
-                const time = vid.currentTime;
-                let closest = state.referenceSequence[0];
-                let minDiff = Infinity;
-
-                for (const frame of state.referenceSequence) {
-                    const diff = Math.abs(frame.time - time);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closest = frame;
-                    }
-                }
-                state.currentRefFrame = closest;
             },
 
             handleImageUpload: (event) => {
@@ -664,18 +620,6 @@
                     document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
                 };
                 imgElement.classList.remove('hidden');
-            },
-
-            initHolistic: () => {
-                const holistic = new Holistic({
-                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
-                });
-                holistic.setOptions({
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
-                });
-                holistic.onResults(app.onResults);
-                return holistic;
             },
 
             onResults: (results) => {
@@ -712,60 +656,6 @@
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {color: '#eebc51', lineWidth: 1});
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: '#ff3333', lineWidth: 1});
                     }
-                }
-
-                // New hitbox logic
-                let hitboxMatchPercent = 0;
-                let errorHighlights = [];
-                let hitboxDetails = [];
-
-                if (results.poseLandmarks && state.referenceSequence.length > 0 && state.currentRefFrame) {
-                    const normUser = app.normalizePose(results.poseLandmarks);
-                    const normRef = app.normalizePose(state.currentRefFrame.pose);
-
-                    const hitboxResult = app.evaluateHitboxes(normUser, normRef);
-                    hitboxMatchPercent = hitboxResult.score;
-                    hitboxDetails = hitboxResult.details;
-
-                    // Render hitboxes
-                    if (state.showLandmarks) {
-                        state.keyJoints.forEach(idx => {
-                            const ref = normRef[idx];
-                            if (ref) {
-                                const cx = ref.x * canvas.width;
-                                const cy = ref.y * canvas.height;
-                                const radius = state.hitboxRadiusNorm * Math.min(canvas.width, canvas.height) * state.userTorsoScale;
-
-                                ctx.beginPath();
-                                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-                                ctx.fillStyle = 'rgba(90, 255, 120, 0.28)';
-                                ctx.fill();
-                                ctx.strokeStyle = 'rgba(120, 255, 160, 0.7)';
-                                ctx.lineWidth = 2;
-                                ctx.stroke();
-                            }
-                        });
-                    }
-
-                    // User feedback dots
-                    state.keyJoints.forEach(idx => {
-                        const user = normUser[idx];
-                        if (user) {
-                            const ux = user.x * canvas.width;
-                            const uy = user.y * canvas.height;
-                            const ref = normRef[idx];
-                            if (ref) {
-                                const inside = app.pointInCircle(user.x, user.y, ref.x, ref.y, state.hitboxRadiusNorm * state.userTorsoScale);
-                                ctx.beginPath();
-                                ctx.arc(ux, uy, 8, 0, 2 * Math.PI);
-                                ctx.fillStyle = inside ? 'rgba(80, 220, 100, 0.55)' : 'rgba(255, 80, 80, 0.35)';
-                                ctx.strokeStyle = inside ? '#50ff80' : '#ff5050';
-                                ctx.lineWidth = 2;
-                                ctx.fill();
-                                ctx.stroke();
-                            }
-                        }
-                    });
                 }
 
                 ctx.restore();
@@ -832,18 +722,6 @@
                 document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
                 document.getElementById('cam-controls').style.opacity = '1';
                 document.getElementById('cam-controls').style.pointerEvents = 'auto';
-
-                // Update hitbox UI
-                document.getElementById('val-hitbox').innerText = hitboxMatchPercent + '%';
-                document.getElementById('bar-hitbox').style.width = hitboxMatchPercent + '%';
-
-                const jointFb = document.getElementById('joint-feedback');
-                jointFb.innerHTML = hitboxDetails.map(d => `
-                    <div class="flex justify-between ${d.inside ? 'text-green-400' : 'text-red-400'}">
-                        <span>${d.name}</span>
-                        <span>${d.inside ? '✓' : '✗'}</span>
-                    </div>
-                `).join('');
             },
 
             stopCamera: () => {
@@ -1222,61 +1100,8 @@
                 state.history = await practiceSessionsDB.find();
                 modal.classList.add('hidden');
                 app.switchTab('results');
-            },
-
-            // New utility functions for hitboxes
-            normalizePose: (landmarks) => {
-                if (!landmarks || landmarks.length < 33) return landmarks;
-
-                const hipAvg = {x: (landmarks[23].x + landmarks[24].x)/2, y: (landmarks[23].y + landmarks[24].y)/2};
-                const centered = landmarks.map(lm => ({...lm, x: lm.x - hipAvg.x + 0.5, y: lm.y - hipAvg.y + 0.5}));
-
-                const refTorso = app.getTorsoLength(state.currentRefFrame?.pose || centered);
-                const userTorso = app.getTorsoLength(centered);
-                state.userTorsoScale = refTorso / userTorso;
-
-                return centered.map(lm => ({...lm, x: 0.5 + (lm.x - 0.5) * state.userTorsoScale, y: 0.5 + (lm.y - 0.5) * state.userTorsoScale}));
-            },
-
-            getTorsoLength: (landmarks) => {
-                if (!landmarks[11] || !landmarks[23]) return 1;
-                const shoulderAvg = {x: (landmarks[11].x + landmarks[12].x)/2, y: (landmarks[11].y + landmarks[12].y)/2};
-                const hipAvg = {x: (landmarks[23].x + landmarks[24].x)/2, y: (landmarks[23].y + landmarks[24].y)/2};
-                return Math.hypot(shoulderAvg.x - hipAvg.x, shoulderAvg.y - hipAvg.y);
-            },
-
-            pointInCircle: (px, py, cx, cy, r) => {
-                return Math.pow(px - cx, 2) + Math.pow(py - cy, 2) <= Math.pow(r, 2);
-            },
-
-            evaluateHitboxes: (userNorm, refNorm) => {
-                let insideCount = 0;
-                const details = [];
-
-                state.keyJoints.forEach(idx => {
-                    const u = userNorm[idx];
-                    const r = refNorm[idx];
-                    if (!u || !r || r.visibility < 0.4) return;
-
-                    const inside = app.pointInCircle(u.x, u.y, r.x, r.y, state.hitboxRadiusNorm * state.userTorsoScale);
-                    if (inside) insideCount++;
-
-                    details.push({
-                        name: idx === 0 ? 'Head' : idx <= 16 ? `Arm ${idx-10}` : `Leg ${idx-22}`,
-                        inside
-                    });
-                });
-
-                const score = Math.round((insideCount / state.keyJoints.length) * 100);
-                return {score, details};
             }
         };
-
-        // Resize tutorial video
-        function resizeTutorial(size) {
-            const window = document.getElementById('practice-tutorial-video');
-            window.style.width = size === 'small' ? '18rem' : '28rem';
-        }
 
         window.addEventListener('DOMContentLoaded', app.init);
     </script>
