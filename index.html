@@ -15,6 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
+    <!-- Added for Hand Mudras -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
         :root {
@@ -218,7 +220,7 @@
                 <div id="dashboard-meta" class="text-lg text-white/80 font-light flex items-center gap-2"></div>
             </div>
             <div class="w-full">
-                <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum</h3>
+                <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum / Modes</h3>
                 <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide"></div>
             </div>
         </div>
@@ -267,7 +269,7 @@
                 <!-- RIGHT SIDE: AI Panel -->
                 <div id="ai-panel" class="absolute top-20 right-8 w-72 glass-card p-5 rounded-xl z-20 transform translate-x-[150%] transition-transform duration-500">
                     <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-                        <span class="text-[var(--color-primary)] font-display text-lg">Holistic Analysis</span>
+                        <span class="text-[var(--color-primary)] font-display text-lg">Holistic / Hand Analysis</span>
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] uppercase text-gray-400">Status:</span>
                             <div id="status-indicator" class="w-2 h-2 rounded-full bg-gray-500"></div>
@@ -286,7 +288,7 @@
                     
                     <div class="mb-4">
                         <div class="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Posture</span>
+                            <span>Posture / Gesture</span>
                             <span id="val-posture">0%</span>
                         </div>
                         <div class="h-1 bg-gray-700 rounded-full overflow-hidden">
@@ -374,7 +376,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC (WITH VIDEO RECORDING IN RESULTS) -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         // --- API INTEGRATION CLASS ---
         class KaladrishtiAPI {
@@ -419,14 +421,15 @@
         const practiceSessionsDB = new MongoService('sessions');
 
         const DANCES = [
+            { id: 'hand_mudras', name: 'Hand Mudras', img: 'media/img/HAND_MUDRAS.png', origin: 'India' }, // ← NEW FIRST ITEM
             { id: 'bharatanatyam', name: 'Bharatanatyam', img: 'media/img/BHARATNATYAM.png', origin: 'Tamil Nadu' },
             { id: 'kathak', name: 'Kathak', img: 'media/img/KATHAK.png', origin: 'North India' },
             { id: 'odissi', name: 'Odissi', img: 'media/img/ODISSI.png', origin: 'Odisha' },
             { id: 'kuchipudi', name: 'Kuchipudi', img: 'media/img/KUCHIPUDI.png', origin: 'Andhra Pradesh' },
             { id: 'kathakali', name: 'Kathakali', img: 'media/img/KATHAKALI.png', origin: 'Kerala' },
             { id: 'mohiniyattam', name: 'Mohiniyattam', img: 'media/img/MOHINIYATTAM.png', origin: 'Kerala' },
-            { id: 'manipuri', name: 'Manipuri', img: 'media/img/MANIPURI.png', origin: 'Manipur' },
-            { id: 'sattriya', name: 'Sattriya', img: 'media/img/SATTRIYA.png', origin: 'Assam' },
+            { id: 'manipuri', name: 'Manipuri', img: 'media/img/MANIPURI.png', origin: 'Manipur' }
+            // Sattriya removed as requested
         ];
 
         const LECTURES = {
@@ -442,8 +445,10 @@
             view: 'landing',
             dance: null,
             lecture: null,
+            mudraType: null,          // ← NEW: 'single' or 'double'
             recording: false,
             holistic: null,
+            hands: null,              // ← NEW for MediaPipe Hands
             camera: null,
             mode: 'camera',
             history: [],
@@ -458,7 +463,7 @@
             stageHoldDuration: 1.5,
             userPoseBuffer: [],
             referenceSequence: [],
-            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]')  // NEW
+            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]')
         };
 
         const router = {
@@ -479,7 +484,7 @@
                 state.history = await practiceSessionsDB.find();
 
                 try {
-                    const response = await fetch('/bhumi_reference.json');
+                    const response = await fetch('bhumi_reference.json');
                     if (!response.ok) throw new Error(`Failed to load JSON: ${response.status}`);
                     state.referenceSequence = await response.json();
                     console.log(`Reference loaded successfully! Frames: ${state.referenceSequence.length}`);
@@ -487,7 +492,6 @@
                     console.error("Failed to load bhumi_reference.json:", err);
                 }
 
-                // Load saved videos
                 state.recordedVideos = JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]');
 
                 setTimeout(() => {
@@ -523,35 +527,54 @@
                 document.getElementById('dashboard-meta').innerHTML = `<i data-lucide="map-pin" class="w-4 h-4"></i> ${state.dance.origin}`;
                 lucide.createIcons();
 
-                const lectures = LECTURES[state.dance.id] || [];
                 const list = document.getElementById('lecture-list');
-                list.innerHTML = lectures.map(l => `
-                    <div onclick="app.selectLecture(${l.id})" class="glass-card p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-white/5 transition">
-                        <div>
-                            <h4 class="text-white font-bold">${l.title}</h4>
-                            <p class="text-xs text-gray-400">${l.desc}</p>
+
+                    if (danceId === 'hand_mudras') {
+                    // ← NEW: Show single + double hand options
+                    list.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <div onclick="app.selectMudra('single')" 
+                                 class="glass-card p-8 rounded-xl cursor-pointer hover:bg-[var(--color-primary)]/20 transition text-center border border-[var(--color-primary)]/40 hover:border-[var(--color-primary)]">
+                                <h3 class="text-3xl font-display text-white mb-3">Single Hand Mudra</h3>
+                                <p class="text-gray-300">Detect gestures with one hand</p>
+                            </div>
+                            <div onclick="app.selectMudra('double')" 
+                                 class="glass-card p-8 rounded-xl cursor-pointer hover:bg-[var(--color-primary)]/20 transition text-center border border-[var(--color-primary)]/40 hover:border-[var(--color-primary)]">
+                                <h3 class="text-3xl font-display text-white mb-3">Double Hand Mudra</h3>
+                                <p class="text-gray-300">Detect gestures with both hands</p>
+                            </div>
                         </div>
-                        <div class="text-right text-sm text-gray-400">
-                            <span>${l.duration}</span>
+                    `;
+                } else {
+                    const lectures = LECTURES[state.dance.id] || [];
+                    list.innerHTML = lectures.map(l => `
+                        <div onclick="app.selectLecture(${l.id})" class="glass-card p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-white/5 transition">
+                            <div>
+                                <h4 class="text-white font-bold">${l.title}</h4>
+                                <p class="text-xs text-gray-400">${l.desc}</p>
+                            </div>
+                            <div class="text-right text-sm text-gray-400">
+                                <span>${l.duration}</span>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                }
 
                 router.navigate('dashboard');
             },
 
-            selectLecture: (lectureId) => {
-                state.lecture = LECTURES[state.dance.id].find(l => l.id === lectureId);
-                if (!state.lecture) return;
+            // ← NEW function for mudra selection
+            selectMudra: (type) => {
+                state.mudraType = type;
+                state.lecture = { title: type === 'single' ? 'Single Hand' : 'Double Hand' };
+                document.getElementById('lecture-nav-title').textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Hand Mudra`;
 
-                document.getElementById('lecture-nav-title').textContent = state.lecture.title;
-                document.querySelector('#content-tutorial video source').src = state.lecture.video;
-                document.querySelector('#content-tutorial video').load();
-                document.getElementById('tutorialVideo').querySelector('source').src = state.lecture.video;
-                document.getElementById('tutorialVideo').load();
+                // Hide tutorial tab content for mudras
+                document.getElementById('content-tutorial').classList.add('hidden');
+                document.getElementById('practice-tutorial-video').style.display = 'none';
 
                 router.navigate('lecture');
-                app.renderResults();
+                app.switchTab('practice');
             },
 
             switchTab: (tabId) => {
@@ -564,12 +587,39 @@
                 });
                 document.getElementById(`tab-${tabId}`).classList.add('bg-[var(--color-primary)]', 'text-black');
 
-                if (tabId === 'practice') app.startCamera();
-                else app.stopCamera();
+                if (tabId === 'practice') {
+                    if (state.dance?.id === 'hand_mudras') {
+                        app.startHandsCamera();
+                    } else {
+                        app.startCamera();
+                    }
+                } else {
+                    app.stopCamera();
+                }
             },
 
             toggleLandmarks: () => {
                 state.showLandmarks = !state.showLandmarks;
+            },
+
+            // ────────────────────────────────────────────────
+            // HOLISTIC LOGIC (your original – kept almost unchanged)
+            // ────────────────────────────────────────────────
+            initHolistic: function() {
+                const holistic = new Holistic({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+                });
+
+                holistic.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+
+                holistic.onResults(app.onResults);
+
+                return holistic;
             },
 
             startCamera: async () => {
@@ -581,8 +631,12 @@
                 loader.style.display = 'flex';
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { width: 1280, height: 720, facingMode: "user" } 
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: "user"
+                        }
                     });
                     video.srcObject = stream;
                     await video.play();
@@ -596,14 +650,157 @@
                         }
                     };
                     sendFrame();
-                } catch (e) {
-                    console.error(e);
-                    alert("Camera start failed. Check permissions.");
+                } catch (err) {
+                    console.error("Camera error:", err.name, err.message);
+                    let msg = "Camera failed to start.";
+                    if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+                        msg = "Camera access denied.\nPlease allow camera permission.";
+                    }
+                    alert(msg);
                     loader.style.display = 'none';
                     placeholder.style.display = 'flex';
                 }
             },
 
+            // ────────────────────────────────────────────────
+            // NEW: HANDS LOGIC FOR MUDRAS
+            // ────────────────────────────────────────────────
+            initHands: function() {
+                const hands = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
+
+                hands.setOptions({
+                    maxNumHands: state.mudraType === 'single' ? 1 : 2,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.7
+                });
+
+                hands.onResults(app.onHandsResults);
+                return hands;
+            },
+
+            startHandsCamera: async () => {
+                const placeholder = document.getElementById('camera-placeholder');
+                const loader = document.getElementById('ai-loading');
+                const video = document.getElementById('webcam');
+
+                placeholder.style.display = 'none';
+                loader.style.display = 'flex';
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "user" }
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+
+                    if (!state.hands) state.hands = app.initHands();
+
+                    const sendFrame = async () => {
+                        if (!video.paused && !video.ended) {
+                            await state.hands.send({image: video});
+                            state.loopId = requestAnimationFrame(sendFrame);
+                        }
+                    };
+                    sendFrame();
+                } catch (err) {
+                    console.error("Hands camera error:", err);
+                    alert("Failed to start camera for hand detection.");
+                    loader.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+            },
+
+            onHandsResults: (results) => {
+                document.getElementById('ai-loading').style.display = 'none';
+                const canvas = document.getElementById('output_canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = results.image.width;
+                canvas.height = results.image.height;
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+                let gestureText = "No hand detected";
+
+                if (results.multiHandLandmarks) {
+                    for (const landmarks of results.multiHandLandmarks) {
+                        if (state.showLandmarks) {
+                            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00ff88', lineWidth: 4});
+                            drawLandmarks(ctx, landmarks, {color: '#ffcc00', fillColor: '#ff6600', radius: 5});
+                        }
+
+                        const gesture = app.detectHandGesture(landmarks);
+                        gestureText = gesture;
+                    }
+                }
+
+                ctx.restore();
+
+                // Show in big text on canvas
+                ctx.font = 'bold 48px Arial';
+                ctx.fillStyle = 'rgba(0, 255, 136, 0.9)';
+                ctx.fillText(gestureText, 40, 80);
+
+                // Show in AI panel
+                document.getElementById('ai-feedback').innerText = gestureText;
+                document.getElementById('status-indicator').classList.add('bg-green-500');
+            },
+
+            detectHandGesture: (landmarks) => {
+                const tips = [4,8,12,16,20];
+                const pips = [3,6,10,14,18];
+                let fingers = [];
+
+                // Thumb
+                fingers.push(landmarks[4].x < landmarks[3].x ? 1 : 0);
+
+                // Other 4 fingers
+                for (let i = 1; i < 5; i++) {
+                    fingers.push(landmarks[tips[i]].y < landmarks[pips[i]].y ? 1 : 0);
+                }
+
+                if (fingers.every(f => f === 0)) return "FIST";
+                if (fingers.every(f => f === 1)) return "OPEN HAND";
+                if (fingers[0]===1 && fingers[1]===0 && fingers[2]===0 && fingers[3]===0 && fingers[4]===0) return "THUMBS UP";
+                if (fingers[0]===0 && fingers[1]===1 && fingers[2]===1 && fingers[3]===0 && fingers[4]===0) return "PEACE";
+                if (fingers[0]===1 && fingers[1]===1 && fingers[2]===0 && fingers[3]===0 && fingers[4]===1) return "ROCK";
+                if (fingers[0]===0 && fingers[1]===1 && fingers[2]===0 && fingers[3]===0 && fingers[4]===0) return "POINTING";
+                return "UNKNOWN";
+            },
+
+            stopCamera: () => {
+                if (state.loopId) cancelAnimationFrame(state.loopId);
+                const video = document.getElementById('webcam');
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
+                }
+                
+                if (state.holistic) {
+                    state.holistic.close();
+                    state.holistic = null;
+                }
+                if (state.hands) {
+                    state.hands.close();
+                    state.hands = null;
+                }
+
+                document.getElementById('camera-placeholder').style.display = 'flex';
+                document.getElementById('ai-panel').classList.add('translate-x-[150%]');
+                document.getElementById('cam-controls').style.opacity = '0';
+                document.getElementById('static-image-source').classList.add('hidden');
+                
+                const cvs = document.getElementById('output_canvas');
+                const ctx = cvs.getContext('2d');
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+            },
+
+            // ────────────────────────────────────────────────
+            // Your original functions (kept intact)
+            // ────────────────────────────────────────────────
             handleImageUpload: (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
@@ -623,6 +820,7 @@
             },
 
             onResults: (results) => {
+                // ← your original holistic onResults code here (I didn't remove it)
                 document.getElementById('ai-loading').style.display = 'none';
                 const canvas = document.getElementById('output_canvas');
                 const ctx = canvas.getContext('2d');
@@ -722,24 +920,6 @@
                 document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
                 document.getElementById('cam-controls').style.opacity = '1';
                 document.getElementById('cam-controls').style.pointerEvents = 'auto';
-            },
-
-            stopCamera: () => {
-                if (state.loopId) cancelAnimationFrame(state.loopId);
-                const video = document.getElementById('webcam');
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(t => t.stop());
-                    video.srcObject = null;
-                }
-                
-                document.getElementById('camera-placeholder').style.display = 'flex';
-                document.getElementById('ai-panel').classList.add('translate-x-[150%]');
-                document.getElementById('cam-controls').style.opacity = '0';
-                document.getElementById('static-image-source').classList.add('hidden');
-                
-                const cvs = document.getElementById('output_canvas');
-                const ctx = cvs.getContext('2d');
-                ctx.clearRect(0,0,cvs.width,cvs.height);
             },
 
             analyzeExpression: (landmarks) => {
@@ -935,7 +1115,6 @@
                         const blob = new Blob(state.recordedChunks, { type: "video/webm" });
                         const url = URL.createObjectURL(blob);
 
-                        // Save to results list instead of download
                         app.saveRecordingToResults(blob, url);
                     };
 
@@ -963,16 +1142,12 @@
                     duration,
                     score: state.currentScore,
                     date,
-                    videoUrl: url  // this is what we'll use to play
+                    videoUrl: url
                 };
 
-                // Add to state
                 state.recordedVideos.push(recording);
-
-                // Save to localStorage (persists across refreshes)
                 localStorage.setItem('kaladrishti_recordings', JSON.stringify(state.recordedVideos));
 
-                // Also add basic info to mock DB
                 practiceSessionsDB.insertOne({
                     dance: recording.dance,
                     lecture: recording.lecture,
@@ -982,7 +1157,6 @@
                     timestamp: date
                 });
 
-                // Refresh results
                 app.renderResults();
                 app.switchTab('results');
             },
@@ -991,7 +1165,6 @@
                 const container = document.getElementById('results-list');
                 const totalDisplay = document.getElementById('total-score-display');
 
-                // Use state.recordedVideos + DB history
                 const recordings = state.recordedVideos;
                 totalDisplay.innerText = recordings.length + state.history.length;
 
@@ -1002,7 +1175,6 @@
 
                 let html = '';
 
-                // Show recorded videos first
                 recordings.forEach(r => {
                     html += `
                         <div class="glass-card p-4 rounded-lg flex flex-col md:flex-row items-center justify-between hover:bg-white/5 transition mb-4">
@@ -1030,7 +1202,6 @@
                     `;
                 });
 
-                // Add DB entries (without video)
                 state.history.forEach(s => {
                     html += `
                         <div class="glass-card p-4 rounded-lg flex items-center justify-between hover:bg-white/5 transition">
