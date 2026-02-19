@@ -126,9 +126,13 @@
             <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-transparent to-black opacity-90"></div>
         </div>
         <div class="relative z-10 text-center p-8 animate-fade-up">
-            <div class="mb-6 flex justify-center">
-                <div class="w-20 h-20 border border-[var(--color-primary)] rounded-full flex items-center justify-center">
+            <div class="mb-6 flex flex-col items-center">
+                <div class="w-20 h-20 border border-[var(--color-primary)] rounded-full flex items-center justify-center mb-4">
                     <i data-lucide="feather" class="w-10 h-10 text-[var(--color-primary)]"></i>
+                </div>
+                <div id="ai-init-status" class="flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-500">
+                    <div class="loader-ring !w-4 !h-4"></div>
+                    Vision Engine Warming Up...
                 </div>
             </div>
             <h1 class="text-7xl md:text-9xl font-bold tracking-tighter text-gold-gradient mb-6">KALADRISHTI</h1>
@@ -140,9 +144,9 @@
 
     <!-- VIEW 2: ENTRY -->
     <div id="view-entry" class="view-section relative items-end pb-20 px-8 md:px-24 overflow-hidden">
-        <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-30 z-0">
-            <source src="media/vid/dancer-bg1.webm" type="video/webm">
-        </video>
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover opacity-30" alt="">
+        </div>
         <div class="absolute inset-0 bg-[var(--color-bg-dark)]/80 z-0"></div>
         <div class="relative z-10 max-w-2xl animate-fade-up">
             <h2 class="text-5xl md:text-7xl font-display text-white mb-8 leading-tight">
@@ -154,23 +158,18 @@
             </p>
             <button onclick="router.navigate('selection')" 
                     class="group flex items-center gap-4 px-10 py-4 glass-card hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all duration-500 rounded-full">
-                <span class="uppercase tracking-widest font-bold text-sm group-hover:text-black">
-                    Begin Journey
-                </span>
+                <span class="uppercase tracking-widest font-bold text-sm group-hover:text-black">Begin Journey</span>
                 <i data-lucide="arrow-right" class="w-5 h-5 group-hover:text-black group-hover:translate-x-2 transition-transform"></i>
             </button>
         </div>
     </div>
+
     <!-- VIEW 3: SELECTION -->
     <div id="view-selection" class="view-section relative overflow-hidden bg-black">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
-        <header class="fixed top-0 w-full z-50 px-8 py-6 relative flex items-center glass-card !border-x-0 !border-t-0 !rounded-none border-b border-[var(--color-primary)]/20">
+        <header class="fixed top-0 w-full z-50 px-8 py-6 flex items-center glass-card !border-x-0 !border-t-0 !rounded-none">
             <div class="flex items-center gap-2 cursor-pointer z-10" onclick="router.navigate('entry')">
                 <i data-lucide="feather" class="text-[var(--color-primary)]"></i>
                 <span class="font-display font-bold text-xl tracking-wide">KALADRISHTI</span>
-            </div>
-            <div class="absolute left-1/2 -translate-x-1/2 text-sm uppercase tracking-widest text-[var(--color-primary)] hidden md:block">
-                Select Form
             </div>
         </header>
         <main class="relative z-10 pt-32 pb-12 px-8 md:px-12 w-full max-w-7xl mx-auto overflow-y-auto custom-scroll">
@@ -181,25 +180,18 @@
     <!-- VIEW 4: DASHBOARD -->
     <div id="view-dashboard" class="view-section relative h-screen w-full overflow-hidden bg-[var(--color-bg-dark)]">
         <div class="absolute inset-0 z-0">
-            <img id="dashboard-hero-img" class="w-full h-full object-cover object-center opacity-40 transition-transform duration-1000 scale-105" alt="Dance background">
-            <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-black/30"></div>
+            <img id="dashboard-hero-img" class="w-full h-full object-cover opacity-40 transition-transform duration-1000 scale-105" alt="Dance background">
         </div>
-        <button onclick="router.navigate('selection')"
-                class="absolute top-6 left-6 z-20 group flex items-center gap-2 text-sm text-[var(--color-primary)] hover:translate-x-1 transition-all duration-300 backdrop-blur-md bg-black/30 px-5 py-2 rounded-full border border-[var(--color-primary)]/30 shadow-lg">
+        <button onclick="router.navigate('selection')" class="absolute top-6 left-6 z-20 group flex items-center gap-2 text-sm text-[var(--color-primary)] hover:translate-x-1 transition-all backdrop-blur-md bg-black/30 px-5 py-2 rounded-full border border-[var(--color-primary)]/30">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
         </button>
         <div class="relative z-10 h-full w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-12 md:pb-20">
             <div class="mb-8">
                 <h1 id="dashboard-title" class="text-5xl md:text-7xl font-display text-white tracking-tight drop-shadow-lg">Loading...</h1>
                 <div class="w-24 h-[2px] bg-[var(--color-primary)] mt-4 mb-6"></div>
-                <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden mb-6">
-                    <div id="progress-bar" class="h-full bg-[var(--color-primary)] w-0 transition-all duration-500"></div>
-                </div>
+                <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden mb-6"><div id="progress-bar" class="h-full bg-[var(--color-primary)] w-0 transition-all duration-500"></div></div>
             </div>
-            <div class="w-full">
-                <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum</h3>
-                <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 custom-scroll"></div>
-            </div>
+            <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 custom-scroll"></div>
         </div>
     </div>
 
@@ -210,48 +202,38 @@
             <div class="flex gap-2 glass-card p-1 rounded-full">
                 <button onclick="app.switchTab('tutorial')" id="tab-tutorial" class="px-4 py-2 rounded-full text-xs font-bold uppercase transition bg-[var(--color-primary)] text-black">Learn</button>
                 <button onclick="app.switchTab('practice')" id="tab-practice" class="px-4 py-2 rounded-full text-xs font-bold uppercase transition text-gray-400">Practice</button>
-                <button onclick="app.switchTab('results')" id="tab-results" class="px-4 py-2 rounded-full text-xs font-bold uppercase transition text-gray-400">Results</button>
             </div>
         </header>
 
-        <main id="lecture-main" class="relative w-full h-screen pt-20">
+        <main id="lecture-main" class="relative w-full h-screen pt-20 flex overflow-hidden">
             <!-- Learn Tab -->
-            <div id="content-tutorial" class="tab-content h-full p-8 flex flex-col items-center">
+            <div id="content-tutorial" class="tab-content h-full w-full p-8 flex flex-col items-center">
                 <div class="w-full max-w-4xl aspect-video bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
                     <i data-lucide="play" class="w-16 h-16 text-[var(--color-primary)] opacity-20"></i>
                 </div>
-                <div class="mt-8 text-center max-w-xl">
-                    <h2 class="text-3xl font-display text-[var(--color-primary)] mb-4">Lesson Overview</h2>
-                    <p class="text-gray-400">Master the fundamental mudras and stances before proceeding to live AI evaluation.</p>
-                </div>
             </div>
 
-            <!-- Practice Tab: Full Pranam Logic Integrated -->
-            <div id="content-practice" class="tab-content hidden h-full flex overflow-hidden">
+            <!-- Practice Tab -->
+            <div id="content-practice" class="tab-content hidden h-full w-full flex overflow-hidden">
                 <!-- Left Sidebar: Instructions & Steps -->
                 <aside class="w-72 h-full glass-card border-l-0 border-y-0 p-6 flex flex-col z-20">
                     <h2 class="text-xl font-display mb-6 border-b border-white/10 pb-2">The Ritual of Pranam</h2>
-                    
                     <div id="stepper" class="space-y-6 flex-grow overflow-y-auto pr-2 custom-scroll">
                         <div id="step-0" class="relative pl-8 transition-all duration-500 opacity-50">
                             <div class="absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-[var(--color-primary)] flex items-center justify-center text-[10px] font-bold">1</div>
                             <h3 class="font-bold text-white text-sm">Anjali Mudra</h3>
-                            <p class="text-[10px] text-gray-400">Join palms at chest height.</p>
                         </div>
                         <div id="step-1" class="relative pl-8 transition-all duration-500 opacity-50">
                             <div class="absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center text-[10px] font-bold">2</div>
                             <h3 class="font-bold text-white text-sm">Saluting Earth</h3>
-                            <p class="text-[10px] text-gray-400">Bend and touch the floor.</p>
                         </div>
                         <div id="step-2" class="relative pl-8 transition-all duration-500 opacity-50">
                             <div class="absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center text-[10px] font-bold">3</div>
                             <h3 class="font-bold text-white text-sm">Seeking Blessings</h3>
-                            <p class="text-[10px] text-gray-400">Bring fingertips to your eyes.</p>
                         </div>
                         <div id="step-3" class="relative pl-8 transition-all duration-500 opacity-50">
                             <div class="absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center text-[10px] font-bold">4</div>
                             <h3 class="font-bold text-white text-sm">Completion</h3>
-                            <p class="text-[10px] text-gray-400"> Namaste and bow.</p>
                         </div>
                     </div>
                     <div class="mt-auto pt-4 bg-black/30 p-4 rounded-lg border border-white/5">
@@ -259,8 +241,7 @@
                     </div>
                 </aside>
 
-                <!-- Center Area: Camera -->
-                <div class="flex-grow relative flex items-center justify-center bg-zinc-950">
+                <div class="flex-grow relative bg-zinc-950">
                     <video id="webcam" class="absolute inset-0 w-full h-full object-cover mirror-mode opacity-50" autoplay muted playsinline></video>
                     <canvas id="output_canvas" class="absolute inset-0 w-full h-full object-cover mirror-mode z-10"></canvas>
                     
@@ -269,86 +250,45 @@
                         <div class="glass-card px-6 py-3 rounded-full flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full border-2 border-white/10 relative flex items-center justify-center">
                                 <svg class="absolute inset-0 w-full h-full -rotate-90">
-                                    <circle id="progress-circle" cx="20" cy="20" r="18" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-dasharray="113.1" stroke-dashoffset="113.1" style="transition: stroke-dashoffset 0.1s linear;"></circle>
+                                    <circle id="progress-circle" cx="20" cy="20" r="18" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
                                 </svg>
                                 <span id="hold-timer" class="text-[10px] font-bold">0s</span>
                             </div>
-                            <div>
-                                <p class="text-[8px] uppercase tracking-widest text-gray-400">Current Task</p>
-                                <p id="step-name" class="text-xs font-bold">Waiting for Camera...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="ai-loading" class="absolute inset-0 pointer-events-none flex items-center justify-center bg-black/50 z-40 hidden">
-                        <div class="flex flex-col items-center">
-                            <div class="loader-ring"></div>
-                            <p class="text-[var(--color-primary)] uppercase text-[10px] tracking-widest font-bold mt-4">Initializing Vision Engine...</p>
+                            <p id="step-name" class="text-xs font-bold">Waiting for Camera...</p>
                         </div>
                     </div>
                     
                     <button id="btn-camera" onclick="app.toggleCamera()" class="absolute bottom-24 right-10 px-8 py-3 bg-[var(--color-primary)] text-black font-bold rounded-full shadow-lg z-50">Start Camera</button>
-                </div>
-
-                <!-- Right Sidebar: Analytics -->
-                <aside class="w-64 h-full glass-card border-r-0 border-y-0 p-6 z-20 flex flex-col">
-                    <h2 class="text-lg font-display mb-4">Live Analytics</h2>
-                    <div class="space-y-6">
-                        <div>
-                            <div class="flex justify-between text-[10px] uppercase mb-2"><span>Symmetry</span><span id="val-symmetry">0%</span></div>
-                            <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden"><div id="bar-symmetry" class="h-full bg-blue-500 w-0 transition-all duration-300"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-[10px] uppercase mb-2"><span>Hold Accuracy</span><span id="val-hold">0%</span></div>
-                            <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden"><div id="bar-hold" class="h-full bg-green-500 w-0 transition-all duration-300"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-[10px] uppercase mb-2"><span>Torso Angle</span><span id="val-torso">180°</span></div>
-                            <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden"><div id="bar-torso" class="h-full bg-purple-500 w-0 transition-all duration-300"></div></div>
+                    
+                    <div id="ai-loading" class="absolute inset-0 flex items-center justify-center bg-black/80 z-40 hidden">
+                        <div class="flex flex-col items-center">
+                            <div class="loader-ring"></div>
+                            <p class="text-[var(--color-primary)] uppercase text-[10px] tracking-widest font-bold mt-4">Vision Engine Initializing...</p>
                         </div>
                     </div>
-                </aside>
-            </div>
-
-            <!-- Results Tab -->
-            <div id="content-results" class="tab-content hidden h-full p-12 overflow-y-auto">
-                <h2 class="text-4xl font-display text-white mb-8">Performance History</h2>
-                <div id="results-list" class="space-y-4"></div>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        const DANCES = [
-            { id: 'bharatanatyam', name: 'Bharatanatyam', img: 'https://images.unsplash.com/photo-1543165365-072114002636?q=80&w=600', origin: 'Tamil Nadu' },
-            { id: 'kathak', name: 'Kathak', img: 'https://images.unsplash.com/photo-1518131393663-39c2f6d62325?q=80&w=600', origin: 'North India' },
-        ];
-
-        const LECTURES = {
-            bharatanatyam: [
-                { id: 1, title: "The Pranam Ritual", duration: "5 min", desc: "Sacred Earth Salutation" },
-                { id: 2, title: "Araimandi Stance", duration: "8 min", desc: "Foundational Posture" }
-            ]
-        };
-
         const PRANAM_STAGES = [
-            { id: 0, name: "Anjali Mudra", instruction: "Join palms at heart center. Align your spine.", tips: "Connect palms tightly" },
-            { id: 1, name: "Touching the Earth", instruction: "Bend forward and touch the ground. Head down.", tips: "Reach for the floor" },
-            { id: 2, name: "Blessing the Eyes", instruction: "Bring fingertips to your eyes as you rise.", tips: "Touch both eyes gently" },
-            { id: 3, name: "Final Offering", instruction: "Return to Namaste and offer a light bow.", tips: "Gratitude" }
+            { id: 0, name: "Anjali Mudra", instruction: "Join palms at heart center." },
+            { id: 1, name: "Touching the Earth", instruction: "Bend forward and touch ground." },
+            { id: 2, name: "Blessing the Eyes", instruction: "Touch fingertips to your eyes." },
+            { id: 3, name: "Final Offering", instruction: "Namaste and light bow." }
         ];
 
         const state = {
             currentView: 'landing',
-            dance: null,
-            lecture: null,
             currentStage: 0,
             holdStartTime: null,
             holdDuration: 2000,
             holistic: null,
             loopId: null,
             isCameraOn: false,
-            navTimer: null
+            navTimer: null,
+            aiReady: false
         };
 
         const router = {
@@ -379,53 +319,47 @@
             init: () => {
                 lucide.createIcons();
                 app.renderDances();
+                
+                // PRE-LOAD AI LOGIC
+                app.initHolistic();
+
                 state.navTimer = setTimeout(() => {
-                    if (state.currentView === 'landing') {
-                        router.navigate('entry');
-                    }
+                    if (state.currentView === 'landing') router.navigate('entry');
                 }, 3000);
+            },
+
+            initHolistic: () => {
+                state.holistic = new Holistic({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+                });
+                state.holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
+                state.holistic.onResults(app.onResults);
+                
+                // Background Warmup
+                state.holistic.send({image: new ImageData(1,1)});
             },
 
             renderDances: () => {
                 const grid = document.getElementById('dance-grid');
-                grid.innerHTML = DANCES.map(d => `
-                    <div onclick="app.selectDance('${d.id}')" class="group relative h-64 rounded-xl overflow-hidden cursor-pointer shadow-2xl glass-card transition-all hover:scale-105">
-                        <img src="${d.img}" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                grid.innerHTML = `<div onclick="app.selectDance('bharatanatyam')" class="group relative h-64 rounded-xl overflow-hidden cursor-pointer shadow-2xl glass-card transition-all hover:scale-105">
+                        <img src="https://images.unsplash.com/photo-1543165365-072114002636?q=80&w=600" class="absolute inset-0 w-full h-full object-cover opacity-60">
                         <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                        <div class="absolute bottom-0 p-6">
-                            <p class="text-[var(--color-primary)] text-xs font-bold uppercase tracking-widest">${d.origin}</p>
-                            <h3 class="text-3xl font-display text-white">${d.name}</h3>
-                        </div>
-                    </div>
-                `).join('');
+                        <div class="absolute bottom-0 p-6"><h3 class="text-3xl font-display text-white">Bharatanatyam</h3></div>
+                    </div>`;
             },
 
             selectDance: (id) => {
-                state.dance = DANCES.find(d => d.id === id);
-                document.getElementById('dashboard-title').innerText = state.dance.name;
-                document.getElementById('dashboard-hero-img').src = state.dance.img;
-                app.renderLectures(id);
+                document.getElementById('dashboard-title').innerText = "Bharatanatyam";
+                document.getElementById('dashboard-hero-img').src = "https://images.unsplash.com/photo-1543165365-072114002636?q=80&w=600";
+                document.getElementById('lecture-list').innerHTML = `
+                    <div onclick="app.selectLecture(1)" class="glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
+                        <h4 class="text-xl font-bold text-white">The Pranam Ritual</h4>
+                    </div>`;
                 router.navigate('dashboard');
             },
 
-            renderLectures: (id) => {
-                const list = document.getElementById('lecture-list');
-                const lecs = LECTURES[id] || [];
-                list.innerHTML = lecs.map((l, i) => `
-                    <div onclick="app.selectLecture(${l.id})" class="glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 transition border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
-                        <div>
-                            <h4 class="text-xl font-bold text-white">${l.title}</h4>
-                            <p class="text-sm text-gray-400">${l.desc}</p>
-                        </div>
-                        <span class="text-xs text-gray-500">${l.duration}</span>
-                    </div>
-                `).join('');
-            },
-
             selectLecture: (id) => {
-                state.lecture = LECTURES[state.dance.id].find(l => l.id === id);
                 state.currentStage = 0;
-                state.holdStartTime = null;
                 app.updateGuidanceUI();
                 app.switchTab('tutorial');
                 router.navigate('lecture');
@@ -434,7 +368,7 @@
             switchTab: (tab) => {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`content-${tab}`).classList.remove('hidden');
-                ['tutorial', 'practice', 'results'].forEach(t => {
+                ['tutorial', 'practice'].forEach(t => {
                     const btn = document.getElementById(`tab-${t}`);
                     if (t === tab) btn.className = "px-4 py-2 rounded-full text-xs font-bold uppercase bg-[var(--color-primary)] text-black";
                     else btn.className = "px-4 py-2 rounded-full text-xs font-bold uppercase text-gray-400";
@@ -453,24 +387,13 @@
                 const loading = document.getElementById('ai-loading');
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { width: 1280, height: 720, facingMode: 'user' } 
-                    });
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
                     video.srcObject = stream;
                     state.isCameraOn = true;
                     btn.innerText = "Stop Camera";
-                    btn.classList.replace('bg-[var(--color-primary)]', 'bg-red-600');
-                    btn.classList.replace('text-black', 'text-white');
+                    btn.className = "absolute bottom-24 right-10 px-8 py-3 bg-red-600 text-white font-bold rounded-full shadow-lg z-50";
                     
-                    loading.classList.remove('hidden');
-
-                    if (!state.holistic) {
-                        state.holistic = new Holistic({
-                            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
-                        });
-                        state.holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
-                        state.holistic.onResults(app.onResults);
-                    }
+                    if(!state.aiReady) loading.classList.remove('hidden');
                     
                     const frameLoop = async () => {
                         if(state.isCameraOn && video.readyState >= 2) {
@@ -479,36 +402,28 @@
                         }
                     };
                     frameLoop();
-                } catch(e) { alert("Unable to access camera."); }
+                } catch(e) { alert("Camera access denied."); }
             },
 
             stopCamera: () => {
                 const video = document.getElementById('webcam');
                 const btn = document.getElementById('btn-camera');
-                const loading = document.getElementById('ai-loading');
-
-                if(video && video.srcObject) {
-                    video.srcObject.getTracks().forEach(t => t.stop());
-                    video.srcObject = null;
-                }
-                
+                if(video?.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
                 state.isCameraOn = false;
                 if(btn) {
                     btn.innerText = "Start Camera";
-                    btn.classList.replace('bg-red-600', 'bg-[var(--color-primary)]');
-                    btn.classList.replace('text-white', 'text-black');
+                    btn.className = "absolute bottom-24 right-10 px-8 py-3 bg-[var(--color-primary)] text-black font-bold rounded-full shadow-lg z-50";
                 }
-                if(loading) loading.classList.add('hidden');
                 if(state.loopId) cancelAnimationFrame(state.loopId);
             },
 
             onResults: (results) => {
-                document.getElementById('ai-loading').classList.add('hidden');
-                app.drawOverlay(results);
-                app.processPranam(results);
-            },
-
-            drawOverlay: (results) => {
+                if(!state.aiReady) {
+                    state.aiReady = true;
+                    document.getElementById('ai-init-status').innerHTML = 'Vision Engine Online';
+                    document.getElementById('ai-loading').classList.add('hidden');
+                }
+                
                 const canvas = document.getElementById('output_canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.width = results.image.width;
@@ -520,65 +435,41 @@
                     drawLandmarks(ctx, results.poseLandmarks, {color: 'var(--color-primary)', lineWidth: 1, radius: 2});
                 }
                 ctx.restore();
+
+                if(!results.poseLandmarks) return;
+                app.processPranam(results);
             },
 
             processPranam: (results) => {
-                if(!results.poseLandmarks) return;
                 const pose = results.poseLandmarks;
                 const lWrist = results.leftHandLandmarks?.[0] || pose[15];
                 const rWrist = results.rightHandLandmarks?.[0] || pose[16];
                 const nose = pose[0];
-                const lHip = pose[23], rHip = pose[24];
-                const midHip = { x: (lHip.x + rHip.x)/2, y: (lHip.y + rHip.y)/2 };
+                const midHipY = (pose[23].y + pose[24].y) / 2;
 
                 let isValid = false;
-
-                // Analytics
-                const sym = 100 - (Math.abs(pose[11].y - pose[12].y) * 500);
-                document.getElementById('val-symmetry').innerText = Math.max(0, Math.round(sym)) + "%";
-                document.getElementById('bar-symmetry').style.width = Math.max(0, sym) + "%";
-
-                const torsoAngle = Math.acos(((nose.y - midHip.y) * 0 + (nose.x - midHip.x) * 1) / Math.hypot(nose.x - midHip.x, nose.y - midHip.y)) * (180 / Math.PI);
-                document.getElementById('val-torso').innerText = Math.round(torsoAngle) + "°";
-                document.getElementById('bar-torso').style.width = (torsoAngle/180 * 100) + "%";
-
                 const dist = Math.hypot(lWrist.x - rWrist.x, lWrist.y - rWrist.y);
 
                 switch(state.currentStage) {
-                    case 0: isValid = dist < 0.12 && lWrist.y < midHip.y; break;
+                    case 0: isValid = dist < 0.12 && lWrist.y < midHipY; break;
                     case 1: isValid = (lWrist.y > 0.8 || rWrist.y > 0.8); break;
                     case 2: isValid = Math.hypot(lWrist.x - nose.x, lWrist.y - nose.y) < 0.15; break;
                     case 3: isValid = dist < 0.12; break;
                 }
 
-                app.updateHoldTimer(isValid);
-            },
-
-            updateHoldTimer: (isValid) => {
-                const now = Date.now();
                 const circle = document.getElementById('progress-circle');
-                const valHold = document.getElementById('val-hold');
-                const barHold = document.getElementById('bar-hold');
-                const feedback = document.getElementById('ai-coach');
-
                 if (isValid) {
-                    if (!state.holdStartTime) state.holdStartTime = now;
-                    const elapsed = now - state.holdStartTime;
-                    const progress = Math.min(1, elapsed / state.holdDuration);
-                    const offset = 113.1 - (progress * 113.1);
-                    
-                    circle.style.strokeDashoffset = offset;
+                    if (!state.holdStartTime) state.holdStartTime = Date.now();
+                    const progress = Math.min(1, (Date.now() - state.holdStartTime) / state.holdDuration);
+                    circle.style.strokeDashoffset = 113.1 - (progress * 113.1);
                     document.getElementById('hold-timer').innerText = (progress * 2).toFixed(1) + 's';
-                    valHold.innerText = Math.round(progress * 100) + "%";
-                    barHold.style.width = (progress * 100) + "%";
-
                     if (progress >= 1) {
                         state.holdStartTime = null;
                         if (state.currentStage < PRANAM_STAGES.length - 1) {
                             state.currentStage++;
                             app.updateGuidanceUI();
                         } else {
-                            alert("Pranam Ritual Completed Successfully! 🙏");
+                            alert("Pranam Ritual Complete! 🙏");
                             app.stopCamera();
                             router.navigate('dashboard');
                         }
@@ -594,27 +485,12 @@
                 const stage = PRANAM_STAGES[state.currentStage];
                 document.getElementById('step-name').innerText = stage.name;
                 document.getElementById('ai-coach').innerText = `"${stage.instruction}"`;
-                
                 PRANAM_STAGES.forEach((s, idx) => {
                     const el = document.getElementById(`step-${idx}`);
                     el.classList.toggle('opacity-100', idx === state.currentStage);
                     el.classList.toggle('opacity-50', idx !== state.currentStage);
                     el.classList.toggle('active-step-pulse', idx === state.currentStage);
-                    const dot = el.querySelector('div');
-                    if (idx < state.currentStage) {
-                        dot.className = "absolute left-0 top-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-[10px] font-bold text-black";
-                        dot.innerHTML = "✓";
-                    } else if (idx === state.currentStage) {
-                        dot.className = "absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-[var(--color-primary)] flex items-center justify-center text-[10px] font-bold";
-                        dot.innerHTML = idx + 1;
-                    }
                 });
-            },
-
-            finishSession: () => {
-                alert("Pranam Ritual Completed Successfully! 🙏");
-                app.stopCamera();
-                router.navigate('dashboard');
             }
         };
 
