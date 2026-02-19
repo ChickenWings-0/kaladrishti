@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaladrishti | The Divine Art of Dance</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,400&family=Montserrat:wght@200;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --color-bg-dark: #0f0c0b;
+            --color-primary: #eebc51;
+            --color-primary-dim: #b88a2d;
+            --color-accent: #9e1b32;
+            --color-text-main: #f5f2eb;
+            --color-text-muted: #9ca3af;
+            
+            --glass-bg: rgba(20, 20, 20, 0.65);
+            --glass-border: rgba(238, 188, 81, 0.15);
+            --glass-shine: rgba(255, 255, 255, 0.03);
+
+            --font-display: 'Cormorant Garamond', serif;
+            --font-body: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-shine);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .text-gold-gradient {
+            background: linear-gradient(to bottom right, #fceeb5, #eebc51, #b88a2d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(238, 188, 81, 0.2);
+        }
+
+        .view-section {
+            display: none;
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+        .view-section.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mirror-mode { transform: scaleX(-1); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .loader-ring {
+            display: inline-block;
+            width: 64px;
+            height: 64px;
+        }
+        .loader-ring:after {
+            content: " ";
+            display: block;
+            width: 46px;
+            height: 46px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 4px solid var(--color-primary);
+            border-color: var(--color-primary) transparent var(--color-primary) transparent;
+            animation: ring 1.2s linear infinite;
+        }
+        @keyframes ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* Modal for video playback */
+        .video-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VIEW 1: LANDING -->
+    <div id="view-landing" class="view-section active items-center justify-center">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1543165365-072114002636?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover opacity-40" alt="">
+            <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-transparent to-black opacity-90"></div>
+        </div>
+        <div class="relative z-10 text-center p-8 animate-fade-up">
+            <div class="mb-6 flex justify-center">
+                <div class="w-20 h-20 border border-[var(--color-primary)] rounded-full flex items-center justify-center">
+                    <i data-lucide="feather" class="w-10 h-10 text-[var(--color-primary)]"></i>
+                </div>
+            </div>
+            <h1 class="text-7xl md:text-9xl font-bold tracking-tighter text-gold-gradient mb-6">KALADRISHTI</h1>
+            <p class="text-lg md:text-2xl text-[var(--color-text-muted)] tracking-[0.3em] uppercase font-light border-t border-b border-white/10 py-4 inline-block">
+                Preserving Heritage through Vision
+            </p>
+        </div>
+    </div>
+
+    <!-- VIEW 2: ENTRY -->
+    <div id="view-entry" class="view-section relative items-end pb-20 px-8 md:px-24 overflow-hidden">
+        <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-30 z-0">
+            <source src="media/vid/dancer-bg1.webm" type="video/webm">
+        </video>
+        <div class="absolute inset-0 bg-[var(--color-bg-dark)]/80 z-0"></div>
+        <div class="relative z-10 max-w-2xl animate-fade-up">
+            <h2 class="text-5xl md:text-7xl font-display text-white mb-8 leading-tight">
+                Step into the <br>
+                <span class="text-[var(--color-primary)] italic">Sacred Circle.</span>
+            </h2>
+            <p class="text-[var(--color-text-muted)] mb-10 text-lg leading-relaxed max-w-md">
+                Experience Indian classical dance with AI-assisted posture correction and detailed expression analysis.
+            </p>
+            <button onclick="router.navigate('selection')" 
+                    class="group flex items-center gap-4 px-10 py-4 glass-card hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all duration-500 rounded-full">
+                <span class="uppercase tracking-widest font-bold text-sm group-hover:text-black">
+                    Begin Journey
+                </span>
+                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:text-black group-hover:translate-x-2 transition-transform"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEW 3: SELECTION -->
+    <div id="view-selection" class="view-section relative overflow-hidden">
+        <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover z-0">
+            <source src="media/vid/dancer-bg1.webm" type="video/webm">
+        </video>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
+
+        <header class="fixed top-0 w-full z-50 px-8 py-6 relative flex items-center glass-card !border-x-0 !border-t-0 !rounded-none border-b border-[var(--color-primary)]/20">
+            <div class="flex items-center gap-2 cursor-pointer z-10" onclick="router.navigate('entry')">
+                <i data-lucide="feather" class="text-[var(--color-primary)]"></i>
+                <span class="font-display font-bold text-xl tracking-wide">KALADRISHTI</span>
+            </div>
+            <div class="absolute left-1/2 -translate-x-1/2 text-sm uppercase tracking-widest text-[var(--color-primary)] hidden md:block">
+                Select Form
+            </div>
+        </header>
+
+        <main class="relative z-10 pt-32 pb-12 px-8 md:px-12 w-full max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dance-grid"></div>
+        </main>
+    </div>
+
+    <!-- VIEW 4: DASHBOARD -->
+    <div id="view-dashboard" class="view-section relative h-screen w-full overflow-hidden bg-[var(--color-bg-dark)] hidden">
+        <div class="absolute inset-0 z-0">
+            <img id="dashboard-hero-img" class="w-full h-full object-cover object-center transition-transform duration-1000 scale-105" alt="Dance background">
+            <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-black/30"></div>
+        </div>
+
+        <button onclick="router.navigate('selection')"
+                class="absolute top-6 left-6 z-20 group flex items-center gap-2 text-sm text-[var(--color-primary)] hover:translate-x-1 transition-all duration-300 backdrop-blur-md bg-black/30 px-5 py-2 rounded-full border border-[var(--color-primary)]/30 shadow-lg">
+            <i data-lucide="arrow-left" class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"></i>
+            Back
+        </button>
+
+        <div class="relative z-10 h-full w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-12 md:pb-20">
+            <div class="mb-8">
+                <h1 id="dashboard-title" class="text-5xl md:text-7xl font-display text-white tracking-tight drop-shadow-lg">
+                    Loading...
+                </h1>
+                <div class="w-24 h-[2px] bg-[var(--color-primary)] mt-4 mb-6"></div>
+                <p id="dashboard-description" class="text-[var(--color-text-muted)] max-w-xl leading-relaxed mb-8">
+                    Discover the divine grammar of movement, expression, and rhythm.
+                </p>
+                <div class="mb-6">
+                    <div class="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
+                        <span>Progress</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-[var(--color-primary)] w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+                <div id="dashboard-meta" class="text-lg text-white/80 font-light flex items-center gap-2"></div>
+            </div>
+            <div class="w-full">
+                <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum</h3>
+                <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 5: LECTURE / PRACTICE / RESULTS -->
+    <div id="view-lecture" class="view-section bg-black">
+        <header id="lecture-header" class="fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center justify-between bg-gradient-to-b from-black/90 to-transparent pointer-events-none">
+            <div class="pointer-events-auto flex items-center gap-4">
+                <button onclick="router.navigate('dashboard')" class="p-2 rounded-full glass-card hover:bg-white/10 transition">
+                    <i data-lucide="chevron-left" class="w-5 h-5 text-white"></i>
+                </button>
+                <span id="lecture-nav-title" class="text-sm font-bold tracking-widest text-gray-300 hidden md:inline">Lecture Title</span>
+            </div>
+            <div class="pointer-events-auto flex gap-2 glass-card p-1 rounded-full">
+                <button onclick="app.switchTab('tutorial')" id="tab-tutorial" class="px-4 py-2 rounded-full text-xs font-bold uppercase transition bg-[var(--color-primary)] text-black">Learn</button>
+                <button onclick="app.switchTab('practice')" id="tab-practice" class="px-4 py-2 rounded-full text-xs font-bold uppercase transition text-gray-400 hover:text-white">Practice</button>
+                <button onclick="app.switchTab('results')" id="tab-results" class="px-4 py-2 rounded-full text-xs font-bold uppercase transition text-gray-400 hover:text-white">Results</button>
+            </div>
+        </header>
+
+        <main id="lecture-main" class="relative w-full h-screen flex flex-col pt-20 pb-0 px-0 md:px-0">
+            
+            <!-- TUTORIAL TAB -->
+            <div id="content-tutorial" class="tab-content w-full h-full p-4 md:p-8 flex flex-col lg:flex-row gap-10 items-start animate-fade-up max-w-7xl mx-auto">
+                <div class="flex-grow bg-zinc-900 rounded-2xl overflow-hidden relative group border border-white/10 shadow-2xl">
+                    <video class="w-full h-full object-cover" controls autoplay muted>
+                        <source src="media/vid/BH1.mp4" type="video/mp4">
+                    </video>
+                </div>
+                <div class="w-full md:w-80 flex-shrink-0 glass-card p-6 rounded-2xl h-fit">
+                    <h4 class="text-[var(--color-primary)] font-bold uppercase text-xs tracking-widest mb-4">Guru's Notes</h4>
+                    <ul class="space-y-4 text-sm text-gray-400">
+                        <li class="flex gap-3"><i data-lucide="info" class="w-5 h-5 text-[var(--color-primary)]"></i> Keep back straight.</li>
+                        <li class="flex gap-3"><i data-lucide="info" class="w-5 h-5 text-[var(--color-primary)]"></i> Bend knees outward.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PRACTICE TAB -->
+            <div id="content-practice" class="tab-content hidden w-full h-full relative bg-black">
+                <video id="webcam" class="absolute inset-0 w-full h-full object-contain mirror-mode" autoplay muted playsinline></video>
+                <img id="static-image-source" class="absolute inset-0 w-full h-full object-contain hidden">
+                <canvas id="output_canvas" class="absolute inset-0 w-full h-full object-contain mirror-mode"></canvas>
+                
+                <!-- RIGHT SIDE: AI Panel -->
+                <div id="ai-panel" class="absolute top-20 right-8 w-72 glass-card p-5 rounded-xl z-20 transform translate-x-[150%] transition-transform duration-500">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+                        <span class="text-[var(--color-primary)] font-display text-lg">Holistic Analysis</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] uppercase text-gray-400">Status:</span>
+                            <div id="status-indicator" class="w-2 h-2 rounded-full bg-gray-500"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Expression</span>
+                            <span id="val-expression" class="text-white">Neutral</span>
+                        </div>
+                        <div class="h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div id="bar-expression" class="h-full bg-purple-500 w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Posture</span>
+                            <span id="val-posture">0%</span>
+                        </div>
+                        <div class="h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div id="bar-posture" class="h-full bg-green-500 w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-white/5 rounded border border-white/5">
+                        <p id="ai-feedback" class="text-xs text-center italic text-gray-300">"Initialize camera..."</p>
+                    </div>
+                </div>
+
+                <!-- LEFT SIDE TUTORIAL VIDEO -->
+                <div id="practice-tutorial-video" class="absolute top-20 left-8 w-72 bg-black rounded-xl overflow-hidden shadow-2xl z-30 cursor-move">
+                    <div class="absolute top-2 right-2 z-40 flex gap-1 bg-black/60 rounded-md p-1">
+                        <button onclick="resizeTutorial('small')" class="px-2 text-white text-sm">−</button>
+                        <button onclick="resizeTutorial('large')" class="px-2 text-white text-sm">+</button>
+                    </div>
+                    <video id="tutorialVideo" class="w-full aspect-video bg-black" controls preload="metadata">
+                        <source src="media/vid/BH1.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <!-- CONTROLS -->
+                <div id="cam-controls" class="absolute bottom-10 right-10 flex flex-col items-center gap-4 z-50 opacity-0 transition pointer-events-none">
+                    <button id="btn-toggle-landmarks" onclick="app.toggleLandmarks()" class="pointer-events-auto p-3 rounded-full bg-gray-800/80 hover:bg-gray-700 text-white mb-2 transition backdrop-blur-sm border border-white/20 shadow-lg" title="Show/Hide Landmarks">
+                        <i data-lucide="eye" class="w-6 h-6"></i>
+                    </button>
+                    <button id="btn-record" onclick="app.toggleRecording()" class="pointer-events-auto w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center shadow-lg shadow-black/50 transition transform hover:scale-110 border-4 border-white/20">
+                        <div class="w-6 h-6 bg-white rounded-sm"></div>
+                    </button>
+                    <span class="text-xs text-white uppercase tracking-widest font-bold drop-shadow-md">Record</span>
+                </div>
+
+                <div id="camera-placeholder" class="absolute inset-0 flex items-center justify-center bg-black/90 z-30">
+                    <div class="text-center p-6">
+                        <div class="w-20 h-20 bg-[var(--color-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                            <i data-lucide="camera" class="w-8 h-8 text-[var(--color-primary)]"></i>
+                        </div>
+                        <h3 class="text-2xl font-display text-white mb-2">Sanctum of Practice</h3>
+                        <p class="text-gray-400 mb-6 max-w-sm mx-auto">AI will track your pose. Blue lines indicate correct alignment, Red lines indicate errors.</p>
+                        <div class="flex flex-col md:flex-row gap-4 justify-center">
+                            <button onclick="app.startCamera()" class="px-8 py-3 bg-[var(--color-primary)] text-black font-bold rounded-full hover:scale-105 transition shadow-[0_0_20px_rgba(238,188,81,0.3)]">
+                                Start Live Camera
+                            </button>
+                            <label class="px-8 py-3 border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition cursor-pointer flex items-center gap-2">
+                                <i data-lucide="upload" class="w-4 h-4"></i> Upload Image
+                                <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="app.handleImageUpload(event)">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-loading" class="absolute inset-0 bg-black/50 z-40 hidden flex-col items-center justify-center pointer-events-none">
+                    <div class="loader-ring"></div>
+                    <p class="mt-4 text-[var(--color-primary)] uppercase tracking-widest text-xs font-bold drop-shadow-md">Initializing AI...</p>
+                </div>
+            </div>
+
+            <!-- RESULTS TAB -->
+            <div id="content-results" class="tab-content hidden w-full h-full p-4 md:p-12 max-w-7xl mx-auto overflow-y-auto">
+                <div class="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
+                    <div>
+                        <h2 class="text-4xl font-display text-white">Performance Report</h2>
+                        <p class="text-[var(--color-text-muted)] text-sm mt-2">Verified by Kaladrishti AI</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-[var(--color-primary)]" id="total-score-display">0</div>
+                        <div class="text-xs uppercase tracking-widest text-gray-500">Total Sessions</div>
+                    </div>
+                </div>
+                <div id="results-list" class="grid gap-4">
+                    <!-- Recordings will be injected here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Processing Modal -->
+    <div id="processing-modal" class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center hidden">
+        <div class="text-center">
+            <div class="loader-ring mb-6 mx-auto"></div>
+            <h3 class="text-2xl font-display text-white mb-2">Analyzing Performance</h3>
+            <p class="text-gray-400 text-sm">Submitting data to API for verification...</p>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC (WITH VIDEO RECORDING IN RESULTS) -->
+    <script>
+        // --- API INTEGRATION CLASS ---
+        class KaladrishtiAPI {
+            constructor(baseUrl) {
+                this.baseUrl = baseUrl || 'https://api.kaladrishti.com/v1';
+            }
+
+            async sendAnalysisData(sessionData) {
+                console.log("Sending data to API:", sessionData);
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const isVerified = sessionData.score > 70;
+                        resolve({
+                            status: 200,
+                            data: {
+                                verified: isVerified,
+                                serverMessage: isVerified ? "Excellent alignment verified." : "Improvement needed in posture.",
+                                correctionPoints: ["Spine straightness", "Elbow height"]
+                            }
+                        });
+                    }, 5000);
+                });
+            }
+        }
+        const api = new KaladrishtiAPI();
+
+        // --- DATABASE SERVICE ---
+        class MongoService {
+            constructor(collectionName) {
+                this.collection = collectionName;
+                this.storageKey = `mongodb_${collectionName}`;
+            }
+            async find() { return JSON.parse(localStorage.getItem(this.storageKey)) || []; }
+            async insertOne(doc) {
+                const data = await this.find();
+                const newDoc = { ...doc, _id: Date.now().toString(), timestamp: new Date() };
+                data.unshift(newDoc);
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+                return newDoc;
+            }
+        }
+        const practiceSessionsDB = new MongoService('sessions');
+
+        const DANCES = [
+            { id: 'bharatanatyam', name: 'Bharatanatyam', img: 'media/img/BHARATNATYAM.png', origin: 'Tamil Nadu' },
+            { id: 'kathak', name: 'Kathak', img: 'media/img/KATHAK.png', origin: 'North India' },
+            { id: 'odissi', name: 'Odissi', img: 'media/img/ODISSI.png', origin: 'Odisha' },
+            { id: 'kuchipudi', name: 'Kuchipudi', img: 'media/img/KUCHIPUDI.png', origin: 'Andhra Pradesh' },
+            { id: 'kathakali', name: 'Kathakali', img: 'media/img/KATHAKALI.png', origin: 'Kerala' },
+            { id: 'mohiniyattam', name: 'Mohiniyattam', img: 'media/img/MOHINIYATTAM.png', origin: 'Kerala' },
+            { id: 'manipuri', name: 'Manipuri', img: 'media/img/MANIPURI.png', origin: 'Manipur' },
+            { id: 'sattriya', name: 'Sattriya', img: 'media/img/SATTRIYA.png', origin: 'Assam' },
+        ];
+
+        const LECTURES = {
+            bharatanatyam: [
+                { id: 1, title: "1", duration: "3 min", desc: "Lecture 1", video: "media/vid/BH1.mp4" },
+                { id: 2, title: "2", duration: "3 min", desc: "Lecture 2", video: "media/vid/BH2.mp4" },
+                { id: 3, title: "3", duration: "2 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
+                { id: 4, title: "4", duration: "8 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
+            ],
+        };
+
+        const state = {
+            
+            view: 'landing',
+            dance: null,
+            lecture: null,
+            recording: false,
+            holistic: null,
+            camera: null,
+            mode: 'camera',
+            history: [],
+            currentScore: 0,
+            loopId: null,
+            showLandmarks: true,
+            poseHoldStart: null,
+            poseConfirmed: false,
+            autoAdvanced: false,
+            bhumiStage: 0,
+            stageStartTime: null,
+            stageHoldDuration: 1.5,
+            userPoseBuffer: [],
+            referenceSequence: [],
+            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]')  // NEW
+        };
+        let tutorialVideoElement = null;
+let lastReferenceUpdate = 0;
+const REFERENCE_UPDATE_INTERVAL_MS = 400;
+
+// ────────────────────────────────────────────────
+// Ideal Bharatanatyam posture values (mainly for Araimandi / basic stances)
+// Tune these numbers by watching your tutorial video (BH1.mp4 etc.)
+// ────────────────────────────────────────────────
+const IDEAL_ARAIMANDI = {
+    // Lower body – most important in Bharatanatyam basic positions
+    kneeBend: {
+        target: 110,       // ideal knee angle in degrees (~100–125° is common for Araimandi)
+        range: 15          // acceptable deviation (±15°)
+    },
+    kneeToeAlignment: {
+        maxDev: 0.08       // max horizontal deviation (normalized coords) between knee and ankle/toe
+    },
+    footTurnout: {
+        min: 140           // minimum angle between the two feet (feet should be turned out)
+    },
+
+    // Upper body
+    shoulderElbowWrist: {
+        target: 160,       // arms fairly straight in many basic arm positions
+        range: 20
+    },
+    elbowHeightSymmetry: {
+        maxDiffY: 0.04     // max vertical difference between left & right elbow
+    },
+    torsoTilt: {
+        maxDevFromVertical: 0.06   // max horizontal deviation of nose from hip center
+    },
+
+    // Overall symmetry
+    hipShoulderLevel: {
+        maxDiffY: 0.03     // max vertical difference between left & right shoulder or hip
+    }
+};
+
+        const router = {
+            navigate: (viewId) => {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                state.view = viewId;
+                if(viewId !== 'lecture') app.stopCamera();
+                if(viewId === 'dashboard') app.switchTab('tutorial');
+                window.scrollTo(0,0);
+            }
+        };
+
+function getLm(landmarks, idx) {
+    return landmarks && landmarks[idx] ? landmarks[idx] : null;
+}
+
+function calculateAngle(a, b, c) {
+    if (!a || !b || !c) return null;
+    const ba = { x: a.x - b.x, y: a.y - b.y };
+    const bc = { x: c.x - b.x, y: c.y - b.y };
+    const dot = ba.x * bc.x + ba.y * bc.y;
+    const magBA = Math.hypot(ba.x, ba.y) || 0.0001;
+    const magBC = Math.hypot(bc.x, bc.y) || 0.0001;
+    let cos = dot / (magBA * magBC);
+    cos = Math.max(-1, Math.min(1, cos));
+    return Math.acos(cos) * 180 / Math.PI;
+}
+
+        const app = {
+            init: async () => {
+                lucide.createIcons();
+                app.renderDances();
+                state.history = await practiceSessionsDB.find();
+
+                try {
+                    const response = await fetch('/bhumi_reference.json');
+                    if (!response.ok) throw new Error(`Failed to load JSON: ${response.status}`);
+                    state.referenceSequence = await response.json();
+                    console.log(`Reference loaded successfully! Frames: ${state.referenceSequence.length}`);
+                } catch (err) {
+                    console.error("Failed to load bhumi_reference.json:", err);
+                }
+
+                // Load saved videos
+                state.recordedVideos = JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]');
+
+                setTimeout(() => {
+                    document.getElementById('view-landing').style.display = 'none';
+                    router.navigate('entry');
+                }, 3000);
+            },
+
+            renderDances: () => {
+                const grid = document.getElementById('dance-grid');
+                grid.innerHTML = DANCES.map(d => `
+                    <div onclick="app.selectDance('${d.id}')" 
+                         class="group relative h-52 rounded-xl overflow-hidden cursor-pointer shadow-2xl border border-white/5 transition-all duration-500 hover:scale-105 hover:border-[var(--color-primary)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                        <img src="${d.img}" class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="${d.name}" onerror="this.src='https://images.unsplash.com/photo-1518131393663-39c2f6d62325?q=80&w=600'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
+                        <div class="absolute bottom-0 left-0 p-6">
+                            <p class="text-[var(--color-primary)] text-xs font-bold uppercase tracking-widest mb-1">${d.origin}</p>
+                            <h3 class="text-2xl font-display text-white mb-2 group-hover:translate-x-2 transition-transform">${d.name}</h3>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            selectDance: (id) => {
+                state.dance = DANCES.find(d => d.id === id);
+                document.getElementById('dashboard-title').innerText = state.dance.name;
+                document.getElementById('dashboard-hero-img').src = state.dance.img;
+
+                const danceLectures = LECTURES[id] || [];
+                document.getElementById('lecture-list').innerHTML = danceLectures.map((l, i) => `
+                    <div onclick="app.selectLecture(${l.id})"
+                         class="glass-card p-6 rounded-sm flex items-center gap-6 cursor-pointer hover:bg-white/5 transition group border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
+                        <div class="text-4xl font-display text-gray-600 group-hover:text-[var(--color-primary)] transition">0${i+1}</div>
+                        <div class="flex-grow">
+                            <h4 class="text-lg font-bold text-white group-hover:text-[var(--color-primary)] transition">${l.title}</h4>
+                            <p class="text-sm text-gray-400">${l.desc}</p>
+                        </div>
+                        <div class="px-3 py-1 border border-gray-700 rounded text-xs text-gray-400">${l.duration}</div>
+                    </div>
+                `).join('');
+
+                router.navigate('dashboard');
+            },
+
+            selectLecture: (id) => {
+                const danceLectures = LECTURES[state.dance.id] || [];
+                state.lecture = danceLectures.find(l => l.id === id);
+                tutorialVideoElement = document.querySelector("#content-tutorial video");
+                const total = danceLectures.length;
+                const percent = Math.floor((state.lecture.id / total) * 100);
+                document.getElementById("progress-bar").style.width = percent + "%";
+                document.getElementById("progress-percent").innerText = percent + "%";
+
+                document.getElementById('lecture-nav-title').innerText = state.lecture.title;
+
+                const tutVid = document.querySelector("#content-tutorial video");
+                const pracVid = document.getElementById("tutorialVideo");
+                tutVid.querySelector("source").src = state.lecture.video;
+                tutVid.load();
+                pracVid.querySelector("source").src = state.lecture.video;
+                pracVid.load();
+
+                state.bhumiStage = 0;
+                state.stageStartTime = null;
+                state.poseConfirmed = false;
+                state.autoAdvanced = false;
+                state.userPoseBuffer = [];
+
+                app.switchTab('tutorial');
+                router.navigate('lecture');
+            },
+
+            switchTab: (tab) => {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`content-${tab}`).classList.remove('hidden');
+                
+                ['tutorial', 'practice', 'results'].forEach(t => {
+                    const btn = document.getElementById(`tab-${t}`);
+                    btn.classList.toggle('bg-[var(--color-primary)]', t === tab);
+                    btn.classList.toggle('text-black', t === tab);
+                    btn.classList.toggle('text-gray-400', t !== tab);
+                });
+
+                if (tab !== 'practice') app.stopCamera();
+                if (tab === 'results') app.renderResults();
+            },
+
+            toggleLandmarks: () => {
+                state.showLandmarks = !state.showLandmarks;
+                const btn = document.getElementById('btn-toggle-landmarks');
+                btn.classList.toggle('bg-red-500/80', !state.showLandmarks);
+                btn.classList.toggle('bg-gray-800/80', state.showLandmarks);
+                btn.innerHTML = `<i data-lucide="${state.showLandmarks ? 'eye' : 'eye-off'}" class="w-6 h-6"></i>`;
+                lucide.createIcons();
+            },
+
+            initHolistic: () => {
+                const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
+                holistic.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false,
+                    smoothSegmentation: false,
+                    refineFaceLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                holistic.onResults(app.onResults);
+                return holistic;
+            },
+
+            startCamera: async () => {
+                state.mode = 'camera';
+                const video = document.getElementById('webcam');
+                const placeholder = document.getElementById('camera-placeholder');
+                const loader = document.getElementById('ai-loading');
+
+                placeholder.style.display = 'none';
+                loader.style.display = 'flex';
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 1280, height: 720, facingMode: "user" } 
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+
+                    if (!state.holistic) state.holistic = app.initHolistic();
+
+                    const sendFrame = async () => {
+                        if (state.mode === 'camera' && !video.paused && !video.ended) {
+                            await state.holistic.send({image: video});
+                            state.loopId = requestAnimationFrame(sendFrame);
+                        }
+                    };
+                    sendFrame();
+                } catch (e) {
+                    console.error(e);
+                    alert("Camera start failed. Check permissions.");
+                    loader.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+            },
+
+            handleImageUpload: (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                state.mode = 'image';
+                if (state.loopId) cancelAnimationFrame(state.loopId);
+                const imgElement = document.getElementById('static-image-source');
+                imgElement.src = URL.createObjectURL(file);
+                document.getElementById('camera-placeholder').style.display = 'none';
+                document.getElementById('ai-loading').style.display = 'flex';
+                imgElement.onload = async () => {
+                    if (!state.holistic) state.holistic = app.initHolistic();
+                    await state.holistic.send({image: imgElement});
+                    document.getElementById('ai-loading').style.display = 'none';
+                    document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
+                };
+                imgElement.classList.remove('hidden');
+            },
+
+            onResults: (results) => {
+                document.getElementById('ai-loading').style.display = 'none';
+                const canvas = document.getElementById('output_canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = results.image.width;
+                canvas.height = results.image.height;
+                state.mode === 'image' ? canvas.classList.remove('mirror-mode') : canvas.classList.add('mirror-mode');
+
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (state.mode === 'image') ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+                                // ── Draw user's own pose/hand/face (improved version) ──
+                if (state.showLandmarks) {
+                    if (results.poseLandmarks) {
+                        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS,
+                            {color: '#00ff88', lineWidth: 4});
+                        drawLandmarks(ctx, results.poseLandmarks,
+                            {color: '#00ff88', lineWidth: 2, radius: 4});
+                    }
+                    if (results.leftHandLandmarks) {
+                        drawConnectors(ctx, results.leftHandLandmarks, HAND_CONNECTIONS,
+                            {color: '#ff9999', lineWidth: 3});
+                        drawLandmarks(ctx, results.leftHandLandmarks,
+                            {color: '#ff9999', radius: 3});
+                    }
+                    if (results.rightHandLandmarks) {
+                        drawConnectors(ctx, results.rightHandLandmarks, HAND_CONNECTIONS,
+                            {color: '#99ffff', lineWidth: 3});
+                        drawLandmarks(ctx, results.rightHandLandmarks,
+                            {color: '#99ffff', radius: 3});
+                    }
+                    if (results.faceLandmarks) {
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_FACE_OVAL,
+                            {color: 'rgba(238, 188, 81, 0.4)', lineWidth: 1});
+                    }
+                }
+
+                // ── NEW: Sync reference skeleton to tutorial video time ──
+                if (tutorialVideoElement && !tutorialVideoElement.paused && state.referenceSequence?.length > 0) {
+                    const now = Date.now();
+                    if (now - lastReferenceUpdate > REFERENCE_UPDATE_INTERVAL_MS) {
+                        lastReferenceUpdate = now;
+                        const videoTimeSec = tutorialVideoElement.currentTime;
+                        const fpsApprox = 30;
+                        const targetFrame = Math.floor(videoTimeSec * fpsApprox);
+                        const refIndex = Math.min(targetFrame, state.referenceSequence.length - 1);
+                        state.currentReferenceFrame = state.referenceSequence[refIndex];
+                    }
+                }
+
+                // ── Draw reference skeleton (golden overlay) ──
+                if (state.showLandmarks && state.currentReferenceFrame?.pose?.length > 0) {
+                    const refPose = state.currentReferenceFrame.pose;
+                    drawConnectors(ctx, refPose, POSE_CONNECTIONS, {
+                        color: 'rgba(238, 188, 81, 0.60)',
+                        lineWidth: 5
+                    });
+                    drawLandmarks(ctx, refPose, {
+                        color: 'rgba(238, 188, 81, 0.85)',
+                        fillColor: 'rgba(0,0,0,0.4)',
+                        lineWidth: 1,
+                        radius: 4
+                    });
+                }
+
+                // ── NEW: Compare user to current reference & give feedback ──
+                let feedbackMessages = [];
+                let matchScore = 100;
+
+                if (results.poseLandmarks && state.currentReferenceFrame?.pose?.length > 0) {
+                    const user = results.poseLandmarks;
+                    const ref = state.currentReferenceFrame.pose;
+
+                    const importantJoints = [11,12,13,14,23,24,25,26,27,28];
+
+                    let totalError = 0;
+                    let count = 0;
+
+                    importantJoints.forEach(idx => {
+                        const u = user[idx];
+                        const r = ref[idx];
+                        if (u && r && u.visibility > 0.4 && r.visibility > 0.4) {
+                            const dist = Math.hypot(u.x - r.x, u.y - r.y, (u.z||0) - (r.z||0));
+                            totalError += dist;
+                            count++;
+                        }
+                    });
+
+                    if (count > 0) {
+                        const avgError = totalError / count;
+                        matchScore = Math.max(0, 100 - Math.round(avgError * 800));
+
+                        const lKneeAngleUser = calculateAngle(getLm(user,23), getLm(user,25), getLm(user,27));
+                        const lKneeAngleRef  = calculateAngle(getLm(ref,23), getLm(ref,25), getLm(ref,27));
+
+                        if (lKneeAngleUser && lKneeAngleRef) {
+                            const diff = lKneeAngleUser - lKneeAngleRef;
+                            if (Math.abs(diff) > 15) {
+                                if (diff > 0) feedbackMessages.push("Bend knees more");
+                                else feedbackMessages.push("Straighten knees a bit");
+                            }
+                        }
+                    }
+                }
+
+                // Show feedback
+                const fb = document.getElementById('ai-feedback');
+                if (feedbackMessages.length > 0) {
+                    fb.innerHTML = feedbackMessages.map(m => `<div class="text-yellow-300">${m}</div>`).join('');
+                } else if (matchScore > 85) {
+                    fb.innerHTML = '<div class="text-green-400 font-bold">Perfect! Keep following the guru</div>';
+                } else {
+                    fb.innerHTML = '<div class="text-gray-300">Follow the golden skeleton</div>';
+                }
+
+                ctx.restore();
+
+                app.analyzeExpression(results.faceLandmarks);
+
+                if (state.dance?.id === 'bharatanatyam' && state.lecture?.id === 1 && state.referenceSequence.length > 0) {
+                    const bhumi = app.detectBhumiPranam(results);
+                    const feedback = document.getElementById('ai-feedback');
+
+                    if (results.poseLandmarks) {
+                        state.userPoseBuffer.push(results.poseLandmarks);
+                        if (state.userPoseBuffer.length > 60) state.userPoseBuffer.shift();
+                    }
+
+                    let matchPercent = 0;
+                    let errorHighlights = [];
+
+                    if (results.poseLandmarks && state.referenceSequence.length > 0) {
+                        const refIndex = Math.min(Math.floor(state.bhumiStage * (state.referenceSequence.length / 4)), state.referenceSequence.length - 1);
+                        const refFrame = state.referenceSequence[refIndex];
+
+                        if (refFrame && refFrame.pose && refFrame.pose.length > 0) {
+                            let totalError = 0;
+                            const keyJoints = [11, 12, 13, 14, 23, 24, 27, 28];
+
+                            keyJoints.forEach(idx => {
+                                const u = results.poseLandmarks[idx];
+                                const r = refFrame.pose[idx];
+                                if (u && r) {
+                                    const dist = Math.hypot(u.x - r.x, u.y - r.y, (u.z || 0) - (r.z || 0));
+                                    totalError += dist;
+                                    if (dist > 0.12) errorHighlights.push(u);
+                                }
+                            });
+
+                            const avgError = totalError / keyJoints.length;
+                            matchPercent = Math.max(0, 100 - Math.round(avgError * 500));
+                        }
+                    }
+
+                    if (bhumi.done) {
+                        feedback.innerText = `${bhumi.step} (Match: ${matchPercent}%)`;
+                        feedback.className = "text-xs text-center italic text-green-400 font-bold bg-black/60 p-3 rounded";
+                        state.currentScore = 100;
+                        if (!state.autoAdvanced) {
+                            state.autoAdvanced = true;
+                            setTimeout(() => app.selectLecture(2), 1500);
+                        }
+                    } else {
+                        feedback.innerText = `${bhumi.step} (Match: ${matchPercent}%)`;
+                        feedback.className = "text-xs text-center italic text-yellow-400 font-bold bg-black/60 p-3 rounded";
+                    }
+
+                    if (state.showLandmarks && errorHighlights.length > 0) {
+                        drawLandmarks(ctx, errorHighlights, {color: 'red', lineWidth: 2, radius: 5});
+                    }
+                }
+
+                const statusInd = document.getElementById('status-indicator');
+                if (analysis.score > 75) statusInd.classList.replace('bg-red-500', 'bg-green-500') || statusInd.classList.add('bg-green-500');
+                else statusInd.classList.replace('bg-green-500', 'bg-red-500') || statusInd.classList.add('bg-red-500');
+
+                document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
+                document.getElementById('cam-controls').style.opacity = '1';
+                document.getElementById('cam-controls').style.pointerEvents = 'auto';
+            },
+
+            stopCamera: () => {
+                if (state.loopId) cancelAnimationFrame(state.loopId);
+                const video = document.getElementById('webcam');
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
+                }
+                
+                document.getElementById('camera-placeholder').style.display = 'flex';
+                document.getElementById('ai-panel').classList.add('translate-x-[150%]');
+                document.getElementById('cam-controls').style.opacity = '0';
+                document.getElementById('static-image-source').classList.add('hidden');
+                
+                const cvs = document.getElementById('output_canvas');
+                const ctx = cvs.getContext('2d');
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+            },
+
+            analyzeExpression: (landmarks) => {
+                if(!landmarks) return;
+                
+                const upper = landmarks[13]; const lower = landmarks[14];
+                const open = Math.abs(upper.y - lower.y);
+
+                const leftM = landmarks[61]; const rightM = landmarks[291];
+                const smile = Math.abs(leftM.x - rightM.x);
+
+                const browL = landmarks[107]; const browR = landmarks[336];
+                const eyeL = landmarks[159]; const eyeR = landmarks[386];
+                const browDist = (Math.abs(browL.y - eyeL.y) + Math.abs(browR.y - eyeR.y)) / 2;
+
+                const el = document.getElementById('val-expression');
+                const bar = document.getElementById('bar-expression');
+                
+                if (open > 0.08) {
+                    el.innerText = "Surprise / Chanting"; el.style.color = "#eebc51"; 
+                    bar.style.width = "90%"; bar.className = "h-full w-0 transition-all duration-300 bg-yellow-500";
+                } else if (smile > 0.5) {
+                    el.innerText = "Joy (Hasya)"; el.style.color = "#4ade80"; 
+                    bar.style.width = "100%"; bar.className = "h-full w-0 transition-all duration-300 bg-green-500";
+                } else if (browDist < 0.02) {
+                    el.innerText = "Anger (Raudra)"; el.style.color = "#ff3333"; 
+                    bar.style.width = "80%"; bar.className = "h-full w-0 transition-all duration-300 bg-red-600";
+                } else {
+                    el.innerText = "Serene / Neutral"; el.style.color = "white"; 
+                    bar.style.width = "30%"; bar.className = "h-full w-0 transition-all duration-300 bg-purple-500";
+                }
+            },
+
+            analyzePosture: (landmarks) => {
+                if (!landmarks || landmarks.length < 33) {
+                    return { score: 0, feedback: ["Full body not visible – adjust camera"], details: {} };
+                }
+
+                const lm = (idx) => getLm(landmarks, idx);
+
+                // Key points
+                const nose      = lm(0);
+                const lShoulder = lm(11);  const rShoulder = lm(12);
+                const lElbow    = lm(13);  const rElbow    = lm(14);
+                const lWrist    = lm(15);  const rWrist    = lm(16);
+                const lHip      = lm(23);  const rHip      = lm(24);
+                const lKnee     = lm(25);  const rKnee     = lm(26);
+                const lAnkle    = lm(27);  const rAnkle    = lm(28);
+
+                if (!lHip || !rHip || !lKnee || !rKnee || !lAnkle || !rAnkle) {
+                    return { score: 0, feedback: ["Legs not detected – step back or adjust position"] };
+                }
+
+                let feedback = [];
+                let scores = [];
+                let weights = [];
+
+                // 1. Knee bend – most important for Araimandi / basic stance
+                const leftKneeAngle  = calculateAngle(lHip, lKnee, lAnkle);
+                const rightKneeAngle = calculateAngle(rHip, rKnee, rAnkle);
+
+                let avgKneeAngle = null;
+                if (leftKneeAngle && rightKneeAngle) {
+                    avgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
+
+                    // Ideal Araimandi knee angle ≈ 100–125°
+                    const idealKnee = IDEAL_ARAIMANDI.kneeBend.target;
+                    const kneeDiff = Math.abs(avgKneeAngle - idealKnee);
+
+                    if (kneeDiff > IDEAL_ARAIMANDI.kneeBend.range) {
+                        if (avgKneeAngle > idealKnee + 10) {
+                            feedback.push("Bend knees more – deeper Araimandi");
+                        } else if (avgKneeAngle < idealKnee - 10) {
+                            feedback.push("Straighten knees slightly");
+                        }
+                    }
+                    scores.push(Math.max(0, 100 - kneeDiff * 3.5));
+                    weights.push(3.0); // very high weight
+                }
+
+                // 2. Knee – toe alignment (knees shouldn't collapse inward)
+                const lKneeToeDev = Math.abs(lKnee.x - lAnkle.x);
+                const rKneeToeDev = Math.abs(rKnee.x - rAnkle.x);
+
+                if (lKneeToeDev > IDEAL_ARAIMANDI.kneeToeAlignment.maxDev) feedback.push("Push left knee outward (align with toes)");
+                if (rKneeToeDev > IDEAL_ARAIMANDI.kneeToeAlignment.maxDev) feedback.push("Push right knee outward");
+
+                // 3. Torso / spine straight (no sideways lean)
+                const midHipX = (lHip.x + rHip.x) / 2;
+                const midShoulderX = lShoulder && rShoulder ? (lShoulder.x + rShoulder.x) / 2 : midHipX;
+                const torsoLean = Math.abs(nose.x - midHipX);
+
+                if (torsoLean > IDEAL_ARAIMANDI.torsoTilt.maxDevFromVertical) {
+                    feedback.push(torsoLean > 0 ? "Lean slightly left to center" : "Lean slightly right to center");
+                }
+                scores.push(Math.max(0, 100 - torsoLean * 900));
+                weights.push(1.8);
+
+                // 4. Shoulders level
+                if (lShoulder && rShoulder) {
+                    const shoulderDiff = Math.abs(lShoulder.y - rShoulder.y);
+                    if (shoulderDiff > IDEAL_ARAIMANDI.hipShoulderLevel.maxDiffY) {
+                        feedback.push("Level your shoulders");
+                    }
+                    scores.push(Math.max(0, 100 - shoulderDiff * 1200));
+                    weights.push(1.2);
+                }
+
+                // 5. Simple arm straightness (can be adjusted per lecture)
+                if (lElbow && lWrist && lShoulder) {
+                    const lArmAngle = calculateAngle(lShoulder, lElbow, lWrist);
+                    if (lArmAngle && Math.abs(lArmAngle - IDEAL_ARAIMANDI.shoulderElbowWrist.target) > IDEAL_ARAIMANDI.shoulderElbowWrist.range) {
+                        feedback.push("Straighten left arm more");
+                    }
+                }
+                // You can add right arm the same way
+
+                // Final score (weighted average)
+                let totalScore = 0, totalWeight = 0;
+                scores.forEach((s, i) => {
+                    totalScore += s * weights[i];
+                    totalWeight += weights[i];
+                });
+                let finalScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+
+                // Bonus: Compare to reference JSON for extra accuracy (distance to keypoints)
+                let jsonMatchPercent = 0;
+                if (state.referenceSequence && state.referenceSequence.length > 0) {
+                    const refIndex = state.bhumiStage || 0;  // Same as overlay
+                    const refPose = state.referenceSequence[refIndex]?.pose || [];
+
+                    if (refPose.length > 0 && landmarks) {
+                        let totalDist = 0;
+                        const keyJoints = [0, 11,12,13,14,23,24,25,26,27,28];  // Nose, shoulders, elbows, hips, knees, ankles
+                        keyJoints.forEach(idx => {
+                            const userLm = landmarks[idx];
+                            const refLm = refPose[idx];
+                            if (userLm && refLm) {
+                                const dist = Math.hypot(userLm.x - refLm.x, userLm.y - refLm.y);
+                                totalDist += dist;
+                            }
+                        });
+                        const avgDist = totalDist / keyJoints.length;
+                        jsonMatchPercent = Math.max(0, 100 - Math.round(avgDist * 500));  // Tune the *500 multiplier
+
+                        if (jsonMatchPercent < 70) {
+                            feedback.push("Adjust to match the golden reference skeleton");
+                        }
+                    }
+                }
+
+                // Include in score (average with existing)
+                finalScore = Math.round((finalScore + jsonMatchPercent) / 2);  // Or weight it
+                state.currentScore = finalScore;
+
+                // Prepare final feedback
+                let displayFeedback = feedback.length > 0 ? feedback.slice(0, 3) : ["Good alignment – hold the position"];
+                if (finalScore >= 82) displayFeedback = ["Excellent! Keep this beautiful posture"];
+
+                document.getElementById('val-posture').innerText = finalScore + "%";
+                document.getElementById('bar-posture').style.width = finalScore + "%";
+
+                const fb = document.getElementById('ai-feedback');
+                fb.innerText = displayFeedback.join("  •  ");
+                fb.className = finalScore >= 80
+                    ? "text-xs text-center italic text-green-300 font-medium bg-black/60 p-3 rounded"
+                    : finalScore >= 50
+                        ? "text-xs text-center italic text-yellow-300 bg-black/60 p-3 rounded"
+                        : "text-xs text-center italic text-red-300 bg-black/60 p-3 rounded";
+
+                return {
+                    score: finalScore,
+                    feedback: displayFeedback,
+                    details: { avgKneeAngle }
+                };
+            },
+
+            detectBhumiPranam: (results) => {
+                if (!results.poseLandmarks || !results.leftHandLandmarks || !results.rightHandLandmarks) {
+                    state.bhumiStage = 0;
+                    state.stageStartTime = null;
+                    return { done: false, step: "Pura sharir camera mein dikhao 🙏 Sir se pair tak lao ya camera adjust karo" };
+                }
+
+                const pose = results.poseLandmarks;
+                const leftHand = results.leftHandLandmarks;
+                const rightHand = results.rightHandLandmarks;
+
+                const nose = pose[0];
+                const leftShoulder = pose[11];
+                const rightShoulder = pose[12];
+                const leftHip = pose[23];
+                const rightHip = pose[24];
+                const leftAnkle = pose[27];
+                const rightAnkle = pose[28];
+
+                const leftWrist = leftHand[0];
+                const rightWrist = rightHand[0];
+
+                const chestY = (leftShoulder.y + rightShoulder.y) / 2;
+                const hipY   = (leftHip.y + rightHip.y) / 2;
+                const ankleY = (leftAnkle.y + rightAnkle.y) / 2;
+
+                const now = Date.now();
+                const tolerance = 0.12;
+
+                let errors = [];
+
+                if (state.bhumiStage === 0) {
+                    const palmsClose = Math.abs(leftWrist.x - rightWrist.x) < 0.06;
+                    const palmsAtChest = Math.abs(leftWrist.y - chestY) < tolerance && Math.abs(rightWrist.y - chestY) < tolerance;
+                    const upright = Math.abs(nose.y - chestY) < 0.18;
+
+                    if (!palmsClose) errors.push("Haathon ko aur tight jodo");
+                    if (!palmsAtChest) errors.push("Haathon ko chhati ke level tak uthao");
+                    if (!upright) errors.push("Seedha khade raho");
+
+                    if (palmsClose && palmsAtChest && upright) {
+                        if (!state.stageStartTime) state.stageStartTime = now;
+                        const hold = (now - state.stageStartTime) / 1000;
+                        if (hold >= state.stageHoldDuration) {
+                            state.bhumiStage = 1;
+                            state.stageStartTime = null;
+                            return { done: false, step: "Shandar! Anjali Mudra perfect. Ab dheere se jhuk jao." };
+                        }
+                        return { done: false, step: `Anjali Mudra hold karo ${(state.stageHoldDuration - hold).toFixed(1)}s aur` };
+                    }
+                    state.stageStartTime = null;
+                    return { done: false, step: "Step 1: Haathon ko jod kar chhati ke samne rakho (Namaste mudra)" };
+                }
+
+                if (state.bhumiStage === 1) {
+                    const torsoBent = nose.y > chestY + 0.08 && nose.y < hipY;
+                    const handsLower = leftWrist.y > chestY + 0.15 && rightWrist.y > chestY + 0.15;
+
+                    if (!torsoBent) errors.push("Aur aage jhuko");
+                    if (!handsLower) errors.push("Haathon ko aur neeche lao");
+
+                    if (torsoBent && handsLower) {
+                        if (!state.stageStartTime) state.stageStartTime = now;
+                        const hold = (now - state.stageStartTime) / 1000;
+                        if (hold >= state.stageHoldDuration) {
+                            state.bhumiStage = 2;
+                            state.stageStartTime = null;
+                            return { done: false, step: "Jhukav perfect! Ab haathon se zameen chhuo." };
+                        }
+                        return { done: false, step: `Jhuk kar ${(state.stageHoldDuration - hold).toFixed(1)}s hold karo` };
+                    }
+                    state.stageStartTime = null;
+                    return { done: false, step: "Step 2: Kamar se aage jhukiye aur haath neeche lao" };
+                }
+
+                if (state.bhumiStage === 2) {
+                    const handsNearGround = leftWrist.y > ankleY - 0.10 && rightWrist.y > ankleY - 0.10;
+                    const deepBend = nose.y > hipY - 0.05;
+
+                    if (!handsNearGround) errors.push("Haathon ko zameen ke aur kareeb lao");
+                    if (!deepBend) errors.push("Aur gehra jhuk jao");
+
+                    if (handsNearGround && deepBend) {
+                        if (!state.stageStartTime) state.stageStartTime = now;
+                        const hold = (now - state.stageStartTime) / 1000;
+                        if (hold >= 2) {
+                            state.poseConfirmed = true;
+                            state.bhumiStage = 3;
+                            return { done: true, step: "Bhumi Pranam pura! Bahut badhiya 🙏" };
+                        }
+                        return { done: false, step: `Zameen chhute hue ${(2 - hold).toFixed(1)}s hold karo` };
+                    }
+                    return { done: false, step: "Step 3: Pura jhuk kar haathon se zameen chhuo" };
+                }
+
+                return { done: true, step: "Bhumi Pranam pura ho gaya 🙏 Shandar!" };
+            },
+
+            toggleRecording: () => {
+                const btn = document.getElementById('btn-record');
+                const inner = btn.querySelector('div');
+                const video = document.getElementById('webcam');
+
+                state.recording = !state.recording;
+
+                if (state.recording) {
+                    inner.className = "w-6 h-6 bg-white rounded-sm animate-pulse";
+                    btn.classList.add("scale-110", "ring-4", "ring-red-900");
+
+                    state.recordedChunks = [];
+                    if (!video.srcObject) {
+                        alert("Camera start karo pehle!");
+                        state.recording = false;
+                        return;
+                    }
+
+                    state.mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: "video/webm" });
+
+                    state.mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) state.recordedChunks.push(e.data);
+                    };
+
+                    state.mediaRecorder.onstop = () => {
+                        const blob = new Blob(state.recordedChunks, { type: "video/webm" });
+                        const url = URL.createObjectURL(blob);
+
+                        // Save to results list instead of download
+                        app.saveRecordingToResults(blob, url);
+                    };
+
+                    state.mediaRecorder.start();
+                    state.recordStartTime = new Date();
+                } else {
+                    inner.className = "w-6 h-6 bg-white rounded-sm";
+                    btn.classList.remove("scale-110", "ring-4", "ring-red-900");
+
+                    if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+                        state.mediaRecorder.stop();
+                    }
+                }
+            },
+
+            // NEW: Save recording to results
+            saveRecordingToResults: (blob, url) => {
+                const durationSec = Math.round((new Date() - state.recordStartTime) / 1000);
+                const duration = `${Math.floor(durationSec / 60)}m ${durationSec % 60}s`;
+                const date = new Date().toLocaleString();
+
+                const recording = {
+                    id: Date.now(),
+                    dance: state.dance?.name || 'Unknown',
+                    lecture: state.lecture?.title || 'Unknown',
+                    duration,
+                    score: state.currentScore,
+                    date,
+                    videoUrl: url  // this is what we'll use to play
+                };
+
+                // Add to state
+                state.recordedVideos.push(recording);
+
+                // Save to localStorage (persists across refreshes)
+                localStorage.setItem('kaladrishti_recordings', JSON.stringify(state.recordedVideos));
+
+                // Also add basic info to mock DB
+                practiceSessionsDB.insertOne({
+                    dance: recording.dance,
+                    lecture: recording.lecture,
+                    duration: recording.duration,
+                    score: recording.score,
+                    status: recording.score > 80 ? "Verified ✅" : "Correction Needed ⚠️",
+                    timestamp: date
+                });
+
+                // Refresh results
+                app.renderResults();
+                app.switchTab('results');
+            },
+
+            renderResults: () => {
+                const container = document.getElementById('results-list');
+                const totalDisplay = document.getElementById('total-score-display');
+
+                // Use state.recordedVideos + DB history
+                const recordings = state.recordedVideos;
+                totalDisplay.innerText = recordings.length + state.history.length;
+
+                if (recordings.length === 0 && state.history.length === 0) {
+                    container.innerHTML = `<div class="text-center py-12 text-gray-500 italic">No recordings found yet. Record a practice session!</div>`;
+                    return;
+                }
+
+                let html = '';
+
+                // Show recorded videos first
+                recordings.forEach(r => {
+                    html += `
+                        <div class="glass-card p-4 rounded-lg flex flex-col md:flex-row items-center justify-between hover:bg-white/5 transition mb-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)]">
+                                    <i data-lucide="video" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold">${r.lecture} (${r.dance})</h4>
+                                    <div class="text-xs text-gray-400 flex gap-2">
+                                        <span>${r.date}</span>
+                                        <span>•</span>
+                                        <span>${r.duration}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right flex flex-col gap-2 mt-3 md:mt-0">
+                                <div class="text-xl font-bold ${r.score > 80 ? 'text-green-400' : 'text-yellow-400'}">${r.score}%</div>
+                                <button onclick="app.playRecordedVideo('${r.videoUrl}')" 
+                                        class="px-6 py-2 bg-[var(--color-primary)] text-black rounded-full hover:bg-[var(--color-primary-dim)] transition">
+                                    Play Video
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Add DB entries (without video)
+                state.history.forEach(s => {
+                    html += `
+                        <div class="glass-card p-4 rounded-lg flex items-center justify-between hover:bg-white/5 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)]">
+                                    <i data-lucide="video" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold">${s.lecture}</h4>
+                                    <div class="text-xs text-gray-400 flex gap-2">
+                                        <span>${new Date(s.timestamp).toLocaleDateString()}</span>
+                                        <span>•</span>
+                                        <span>${s.duration}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold ${s.score > 80 ? 'text-green-400' : 'text-yellow-400'}">${s.score}%</div>
+                                <div class="text-[10px] uppercase tracking-widest ${s.status.includes('Verified') ? 'text-green-500' : 'text-red-400'}">${s.status}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                lucide.createIcons();
+            },
+
+            playRecordedVideo: (url) => {
+                const modal = document.createElement('div');
+                modal.className = 'video-modal';
+                modal.innerHTML = `
+                    <div class="relative w-11/12 max-w-5xl bg-black rounded-xl overflow-hidden shadow-2xl">
+                        <button onclick="this.closest('.video-modal').remove()" 
+                                class="absolute top-4 right-4 z-10 bg-red-600 text-white px-5 py-2 rounded-full hover:bg-red-700 transition">
+                            Close
+                        </button>
+                        <video controls autoplay class="w-full max-h-[80vh]" src="${url}"></video>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            },
+
+            submitToDatabase: async () => {
+                const modal = document.getElementById('processing-modal');
+                modal.classList.remove('hidden');
+                
+                const duration = Math.round((new Date() - state.recordStartTime) / 1000);
+                const payload = {
+                    userId: 'user_123',
+                    lectureId: state.lecture?.id,
+                    score: state.currentScore,
+                    duration: duration,
+                    timestamp: new Date().toISOString()
+                };
+
+                const apiResponse = await api.sendAnalysisData(payload);
+                
+                await practiceSessionsDB.insertOne({
+                    dance: state.dance?.name,
+                    lecture: state.lecture?.title,
+                    duration: `${Math.floor(duration/60)}m ${duration%60}s`,
+                    score: state.currentScore,
+                    status: apiResponse.data.verified ? "Verified ✅" : "Correction Needed ⚠️"
+                });
+                
+                state.history = await practiceSessionsDB.find();
+                modal.classList.add('hidden');
+                app.switchTab('results');
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', app.init);
+    </script>
+</body>
+</html>
